@@ -27,7 +27,7 @@ author_profile: true
 
 ---
 
-- **[Preprint]** <a href="https://arxiv.org/abs/2412.07894">Ampelos: Efficient Checkpointing and Fault-Recovery for Elastic Distributed Training</a> 
+- **[Preprint]** <a href="TBD">Ampelos: Efficient Checkpointing and Fault-Recovery for Elastic Distributed Training</a> 
   *Xuanyu Wang\*, Fangcheng Fu\*, <b>Haoyang Li</b>, Hao Ge, Sheng Lin, Jiawen Niu, Bin Cui*
 
 ---
