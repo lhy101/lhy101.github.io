@@ -7,9 +7,9 @@
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Li Haoyang / Personal Website"
+title                    : "Haoyang Li / Personal Website"
 title_separator          : "-"
-name                     : &name "Li Haoyang"
+name                     : &name "Haoyang Li"
 description              : &description "a PKU student"
 url                      : https://lhy101.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
@@ -80,14 +80,14 @@ analytics:
 
 # Site Author
 author:
-  name             : "Li Haoyang"
+  name             : "Haoyang Li"
   avatar           : "personal.png"
-  bio              : "A PKU CS student"
+  bio              : "Email: 2000012918@stu.pku.edu.cn"
   location         : "Beijing, China"
   employer         :
   pubmed           : # "https://www.ncbi.nlm.nih.gov/pubmed/?term=john+snow"
   googlescholar    : "https://scholar.google.com/citations?hl=en&view_op=list_works&gmla=AIfU4H777nLm4mVmvtAzhdiroXAznZQKos2ph48Q69LoqiWRKDXyjNfxxI4ic02ShOqt8BZKkOgdAH4B036IIA&user=qxRByQ8AAAAJ"
-  email            : "2000012918@stu.pku.edu.cn"
+  email            : # "2000012918@stu.pku.edu.cn"
   researchgate     : # example: "https://www.researchgate.net/profile/yourprofile"
   uri              :
   bitbucket        :
