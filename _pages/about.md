@@ -8,4 +8,4 @@ redirect_from:
   - /about.html
 ---
 
-I'm now a BS student of professor Cui Bin in Peking University. My research interest is deep learning systems, and I'm working with PKU-DAIR's Hetu team. 
+I am currently a Ph.D. student at Peking University, advised by Professor Bin Cui. My research focuses on deep learning systems, and I work with the Hetu team at PKU-DAIR.
