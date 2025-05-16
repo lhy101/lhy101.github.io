@@ -22,12 +22,12 @@ author_profile: true
 
 ---
 
-- **[Preprint]** <a href="https://arxiv.org/abs/2412.07894">Demystifying Workload Imbalances in Large Transformer Model Training over Variable-length Sequences</a>< 
+- **[Preprint]** <a href="https://arxiv.org/abs/2412.07894">Demystifying Workload Imbalances in Large Transformer Model Training over Variable-length Sequences</a>
   *<b>Haoyang Li</b>, Fangcheng Fu, Sheng Lin, Hao Ge, Xuanyu Wang, Jiawen Niu, Jie Jiang, Bin Cui*
 
 ---
 
-- **[Preprint]** <a href="https://arxiv.org/abs/2412.07894">Ampelos: Efficient Checkpointing and Fault-Recovery for Elastic Distributed Training</a>< 
+- **[Preprint]** <a href="https://arxiv.org/abs/2412.07894">Ampelos: Efficient Checkpointing and Fault-Recovery for Elastic Distributed Training</a> 
   *Xuanyu Wang, Fangcheng Fu, <b>Haoyang Li</b>, Hao Ge, Sheng Lin, Jiawen Niu, Bin Cui*
 
 ---
