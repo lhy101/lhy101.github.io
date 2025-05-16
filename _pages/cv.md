@@ -9,24 +9,7 @@ redirect_from:
 
 {% include base_path %}
 
-Education
 ======
-* B.S. in Peking University, 2020 - 
+* B.S. in Peking University, 2020 - 2024
+* Ph.D. in Peking University, 2024 - now
 
-Work experience
-======
-
-Skills
-======
-
-Publications
-======
-  
-Talks
-======
-
-Teaching
-======
-  
-Service and leadership
-======
