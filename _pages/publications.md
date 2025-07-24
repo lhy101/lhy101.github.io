@@ -27,8 +27,8 @@ author_profile: true
 
 ---
 
-- **[Preprint]** <a href="TBD">Ampelos: Efficient Checkpointing and Fault-Recovery for Elastic Distributed Training</a> 
-  *Xuanyu Wang\*, Fangcheng Fu\*, <b>Haoyang Li</b>, Hao Ge, Sheng Lin, Jiawen Niu, Bin Cui*
+- **[Preprint]** <a href="TBD">Elastor: Elastic and Efficient Model Partitioning and Checkpointing for Fault-tolerant Distributed DL Training</a> 
+  *Xuanyu Wang, Fangcheng Fu, <b>Haoyang Li</b>, Hao Ge, Sheng Lin, Jiawen Niu, Bin Cui*
 
 ---
 
