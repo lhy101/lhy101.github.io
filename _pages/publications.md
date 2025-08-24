@@ -22,13 +22,13 @@ author_profile: true
 
 ---
 
-- **[Preprint]** <a href="https://arxiv.org/abs/2412.07894">Demystifying Workload Imbalances in Large Transformer Model Training over Variable-length Sequences</a>
-  *<b>Haoyang Li</b>, Fangcheng Fu, Sheng Lin, Hao Ge, Xuanyu Wang, Jiawen Niu, Jie Jiang, Bin Cui*
+- **[Preprint]** <a href="TBD">Elastor: Elastic and Efficient Model Partitioning and Checkpointing for Fault-tolerant Distributed DL Training</a> 
+  *Xuanyu Wang, Fangcheng Fu, <b>Haoyang Li</b>, Hao Ge, Sheng Lin, Jiawen Niu, Bin Cui*
 
 ---
 
-- **[Preprint]** <a href="TBD">Elastor: Elastic and Efficient Model Partitioning and Checkpointing for Fault-tolerant Distributed DL Training</a> 
-  *Xuanyu Wang, Fangcheng Fu, <b>Haoyang Li</b>, Hao Ge, Sheng Lin, Jiawen Niu, Bin Cui*
+- **[SIGMOD 2026]** <a href="https://arxiv.org/abs/2412.07894">Demystifying Workload Imbalances in Large Transformer Model Training over Variable-length Sequences</a>
+  *<b>Haoyang Li</b>, Fangcheng Fu, Sheng Lin, Hao Ge, Xuanyu Wang, Jiawen Niu, Jie Jiang, Bin Cui*
 
 ---
 
