@@ -17,12 +17,12 @@ author_profile: true
 
 \* indicates equal contribution
 
-- **[Preprint, ChinaSys 2025 Oral]** <a href="https://arxiv.org/abs/2410.13333">Hetu v2: A General and Scalable Deep Learning System with Hierarchical and Heterogeneous Single Program Multiple Data Annotations</a> 
+- **[Preprint, ChinaSys 2025 Oral]** <a href="https://arxiv.org/abs/2504.20490">Hetu v2: A General and Scalable Deep Learning System with Hierarchical and Heterogeneous Single Program Multiple Data Annotations</a> 
   *<b>Haoyang Li</b>, Fangcheng Fu, Hao Ge, Sheng Lin, Xuanyu Wang, Jiawen Niu, Xupeng Miao, Bin Cui*
 
 ---
 
-- **[Preprint]** <a href="TBD">Elastor: Elastic and Efficient Model Partitioning and Checkpointing for Fault-tolerant Distributed DL Training</a> 
+- **[PPoPP 2026]** <a href="TBD">Elastor: Elastic and Efficient Model Partitioning and Checkpointing for Fault-tolerant Distributed DL Training</a> 
   *Xuanyu Wang, Fangcheng Fu, <b>Haoyang Li</b>, Hao Ge, Sheng Lin, Jiawen Niu, Bin Cui*
 
 ---
@@ -37,7 +37,7 @@ author_profile: true
 
 ---
 
-- **[VLDB 2025]** <a href="TBD">LobRA: Multi-tenant Fine-tuning over Heterogeneous Data</a>
+- **[VLDB 2025]** <a href="https://arxiv.org/abs/2509.01193">LobRA: Multi-tenant Fine-tuning over Heterogeneous Data</a>
   *Sheng Lin\*, Fangcheng Fu\*, <b>Haoyang Li</b>, Hao Ge, Xuanyu Wang, Jiawen Niu, Yaofeng Tu, Bin Cui*
 
 ---
