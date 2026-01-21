@@ -17,27 +17,32 @@ author_profile: true
 
 \* indicates equal contribution
 
+- **[Preprint]** <a href="https://arxiv.org/abs/2601.12784">Unleashing Efficient Asynchronous RL Post-Training via Staleness-Constrained Rollout Coordination</a> 
+  *<b>Haoyang Li</b>\*, Sheng Lin\*, Fangcheng Fu, Yuming Zhou, Xiaodong Ji, Yanfeng Zhao, Lefeng Wang, Jie Jiang, Bin Cui*
+
+---
+
 - **[Preprint, ChinaSys 2025 Oral]** <a href="https://arxiv.org/abs/2504.20490">Hetu v2: A General and Scalable Deep Learning System with Hierarchical and Heterogeneous Single Program Multiple Data Annotations</a> 
   *<b>Haoyang Li</b>, Fangcheng Fu, Hao Ge, Sheng Lin, Xuanyu Wang, Jiawen Niu, Xupeng Miao, Bin Cui*
 
 ---
 
-- **[PPoPP 2026]** <a href="TBD">Elastor: Elastic and Efficient Model Partitioning and Checkpointing for Fault-tolerant Distributed DL Training</a> 
+- **[PPoPP 2026]** <a href="https://ppopp26.sigplan.org/details/PPoPP-2026-papers/35/Elastor-Elastic-and-Efficient-Model-Partitioning-and-Checkpointing-for-Fault-toleran">Elastor: Elastic and Efficient Model Partitioning and Checkpointing for Fault-tolerant Distributed DL Training</a> 
   *Xuanyu Wang, Fangcheng Fu, <b>Haoyang Li</b>, Hao Ge, Sheng Lin, Jiawen Niu, Bin Cui*
 
 ---
 
-- **[SIGMOD 2026]** <a href="https://arxiv.org/abs/2412.07894">Demystifying Workload Imbalances in Large Transformer Model Training over Variable-length Sequences</a>
-  *<b>Haoyang Li</b>, Fangcheng Fu, Sheng Lin, Hao Ge, Xuanyu Wang, Jiawen Niu, Jie Jiang, Bin Cui*
+- **[SIGMOD 2026]** <a href="https://dl.acm.org/doi/10.1145/3769802">Hydraulis: Balancing Large Transformer Model Training via Co-designing Parallel Strategies and Data Assignment</a>
+  *<b>Haoyang Li</b>, Fangcheng Fu, Sheng Lin, Hao Ge, Xuanyu Wang, Jiawen Niu, Jinbao Xue, Yangyu Tao, Di Wang, Jie Jiang, Bin Cui*
 
 ---
 
-- **[SIGMOD 2025]** <a href="https://arxiv.org/abs/2410.13333">Malleus: Straggler-Resilient Hybrid Parallel Training of Large-scale Models via Malleable Data and Model Parallelization</a>
+- **[SIGMOD 2025]** <a href="https://dl.acm.org/doi/10.1145/3725322">Malleus: Straggler-Resilient Hybrid Parallel Training of Large-scale Models via Malleable Data and Model Parallelization</a>
   *<b>Haoyang Li</b>\*, Fangcheng Fu\*, Hao Ge, Sheng Lin, Xuanyu Wang, Jiawen Niu, Yujie Wang, Hailin Zhang, Xiaonan Nie, Bin Cui*
 
 ---
 
-- **[VLDB 2025]** <a href="https://arxiv.org/abs/2509.01193">LobRA: Multi-tenant Fine-tuning over Heterogeneous Data</a>
+- **[VLDB 2025]** <a href="https://dl.acm.org/doi/10.14778/3742728.3742752">LobRA: Multi-tenant Fine-tuning over Heterogeneous Data</a>
   *Sheng Lin\*, Fangcheng Fu\*, <b>Haoyang Li</b>, Hao Ge, Xuanyu Wang, Jiawen Niu, Yaofeng Tu, Bin Cui*
 
 ---
