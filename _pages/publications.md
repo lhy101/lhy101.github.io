@@ -17,7 +17,12 @@ author_profile: true
 
 \* indicates equal contribution
 
-- **[Preprint]** <a href="https://arxiv.org/abs/2601.12784">Unleashing Efficient Asynchronous RL Post-Training via Staleness-Constrained Rollout Coordination</a> 
+- **[Preprint]** <a href="https://arxiv.org/abs/2606.11867">Harnessing Routing Foresight for Micro-step-level MoE load balancing in RL Post-training</a> 
+  *Yuming Zhou\*, <b>Haoyang Li</b>\*, Sheng Lin, Yanfeng Zhao, Tong Zhao, Xupeng Miao, Jie Jiang, Fangcheng Fu, Bin Cui*
+
+---
+
+- **[SIGMOD'27]** <a href="https://arxiv.org/abs/2601.12784">Unleashing Efficient Asynchronous RL Post-Training via Staleness-Constrained Rollout Coordination</a> 
   *<b>Haoyang Li</b>\*, Sheng Lin\*, Fangcheng Fu, Yuming Zhou, Xiaodong Ji, Yanfeng Zhao, Lefeng Wang, Jie Jiang, Bin Cui*
 
 ---
