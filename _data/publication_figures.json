@@ -1,0 +1,13 @@
+{
+  "scienceide": {"source_match": "ScienceIDE", "page": 4, "clip": [91, 227, 504, 398], "label": "Fig. 2 · Technical overview"},
+  "pivotrl": {"source_match": "PivotRL", "page": 2, "clip": [52, 71, 560, 149], "label": "Fig. 2 · Deployment paradigms"},
+  "routing": {"source_match": "ForeMoE", "page": 6, "clip": [52, 70, 560, 172], "label": "Fig. 7 · Reconfiguration & transfer"},
+  "staleflow": {"source_match": "StaleFlow", "page": 6, "clip": [52, 81, 560, 184], "label": "Fig. 7 · Staleness control"},
+  "hetu": {"source_match": "HSPMD", "page": 6, "clip": [50, 69, 561, 305], "label": "Fig. 5 · System workflow"},
+  "elastor": {"source_match": "Elastor", "page": 8, "clip": [53, 71, 561, 200], "label": "Figs. 6–7 · Architecture & partitioning"},
+  "hydraulis": {"source_match": "Hydraulis", "page": 11, "clip": [47, 83, 439, 258], "label": "Fig. 8 · System overview"},
+  "malleus": {"source_match": "Malleus", "page": 9, "clip": [44, 84, 442, 194], "label": "Fig. 4 · Planning overview"},
+  "lobra": {"source_match": "LobRA", "page": 5, "clip": [104, 83, 507, 177], "label": "Fig. 5 · System overview"},
+  "hotspa": {"source_match": "HotSPa", "page": 7, "clip": [64, 71, 545, 470], "label": "Fig. 5 · Parallelism hot switching"},
+  "diffusion": {"source_match": "FISEdit", "page": 2, "clip": [102, 53, 508, 273], "label": "Fig. 1 · Interactive image editing"}
+}

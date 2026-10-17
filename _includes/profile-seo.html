@@ -1,0 +1,43 @@
+<meta property="og:type" content="website">
+<meta property="og:image" content="{{ '/images/personal.png' | absolute_url }}">
+<meta property="og:image:alt" content="Haoyang Li, Peking University">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ seo_title | escape }}">
+<meta name="twitter:description" content="{{ seo_description }}">
+<meta name="twitter:image" content="{{ '/images/personal.png' | absolute_url }}">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "{{ '/' | absolute_url }}#haoyang-li",
+      "name": "Haoyang Li",
+      "alternateName": ["Haoyang Li (PKU)", "lhy101"],
+      "url": {{ '/' | absolute_url | jsonify }},
+      "image": {{ '/images/personal.png' | absolute_url | jsonify }},
+      "jobTitle": "Ph.D. student in Computer Science",
+      "description": {{ site.description | jsonify }},
+      "affiliation": { "@type": "CollegeOrUniversity", "name": "Peking University", "alternateName": "PKU", "url": "https://www.pku.edu.cn/" },
+      "knowsAbout": ["Deep learning training systems", "Reinforcement learning post-training", "Distributed systems"],
+      "sameAs": {{ site.social.links | jsonify }}
+    },
+    {
+      "@type": "WebSite",
+      "@id": "{{ '/' | absolute_url }}#website",
+      "name": "Haoyang Li | Peking University (PKU)",
+      "url": {{ '/' | absolute_url | jsonify }},
+      "inLanguage": "en",
+      "author": { "@id": "{{ '/' | absolute_url }}#haoyang-li" }
+    },
+    {
+      "@type": "{% if page.permalink == '/' %}ProfilePage{% else %}CollectionPage{% endif %}",
+      "@id": {{ page.url | absolute_url | jsonify }},
+      "url": {{ page.url | absolute_url | jsonify }},
+      "name": {{ page.title | jsonify }},
+      "isPartOf": { "@id": "{{ '/' | absolute_url }}#website" },
+      "{% if page.permalink == '/' %}mainEntity{% else %}about{% endif %}": { "@id": "{{ '/' | absolute_url }}#haoyang-li" }
+    }
+  ]
+}
+</script>

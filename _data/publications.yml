@@ -1,0 +1,236 @@
+- id: scienceide
+  year: 2026
+  venue: Technical Report
+  title: 'ScienceIDE: Turning World’s Scientific Codebase into Agent Learnable Environments'
+  authors: 'Hejia Geng\*, Zesen Huang\*, **Haoyang Li**, Wenbin Li, and others'
+  url: https://arxiv.org/abs/2609.19134
+  image: /assets/papers/scienceide-hero.png
+  figure_pdf: /assets/papers/scienceide-hero.pdf
+  figure_summary: Turning scientific code into verifiable environments for agent learning.
+  image_width: 413
+  image_height: 171
+  image_alt: ScienceIDE paper figure showing the scientific code environment workflow
+  contributions: ScienceIDE turns scientific code repositories into programmable environments for scientific agents.
+    Guided by expert-defined cases and acceptance criteria, it supports task generation, execution, and verification,
+    creating a shared substrate for supervised fine-tuning, reinforcement learning, and evaluation.
+  abstract: Scientific code repositories encode decades of human knowledge in executable models, methods, and tools.
+    Yet fragmented toolchains, implicit domain conventions, and specialized correctness criteria make this knowledge
+    difficult to convert into reliable learning experience—a challenge we call the scientific experience bottleneck.
+    We introduce ScienceIDE, infrastructure for turning the world’s scientific code into programmable environments
+    for scientific agents. Guided by expert-defined scientific cases and acceptance criteria, agents transform repositories
+    into executable environments that support task generation, execution, and scientific verification. These environments
+    provide a shared foundation for supervised fine-tuning, reinforcement learning, and evaluation. Using verified
+    interaction trajectories, we train PhAI-IDE-72B, PhAI-IDE-9B, and PhAI-IDE-4B. The model family shows gains
+    in held-out scientific-code repair and across selected general-purpose benchmarks in code, reasoning, and knowledge,
+    providing evidence of positive transfer from scientific experience to broader capabilities. ScienceIDE lays
+    the foundation for an integrated workspace for agent learning and scientific practice, making humanity’s scientific
+    software a shared substrate for developing scientific intelligence.
+- id: pivotrl
+  year: 2026
+  venue: Preprint
+  title: Efficient Resource-Shiftable RL Post-training with Generative Rewards
+  authors: Yanfeng Zhao\*, **Haoyang Li**\*, Sheng Lin, Yuming Zhou, Jiawei Jiang, Bin Cui, Fangcheng Fu
+  url: https://arxiv.org/abs/2610.16866
+  image: /assets/papers/pivotrl-hero.png
+  figure_pdf: /assets/papers/pivotrl-hero.pdf
+  figure_summary: Shifting GPUs between rollout, rewards, and training as workloads change.
+  image_width: 508
+  image_height: 78
+  image_alt: 'PivotRL Figure 2: colocated, disaggregated, and resource-shiftable deployments'
+  contributions: PivotRL dynamically shifts GPU resources among policy rollout, generative reward evaluation, and
+    policy training as their workloads change. A shared parameter store, shift-aware scheduler, and throughput-aware
+    planner make role migration fast while preserving RL convergence.
+  abstract: |-
+    Reinforcement learning (RL) post-training with generative reward models (GenRM) has become a central recipe for improving large language models (LLMs), and it is also increasingly resource-intensive: policy rollout, GenRM-based reward evaluation, and policy training all compete for GPU resources. However, existing colocated and disaggregated systems rely on static resource allocation for these roles. Such allocation cannot adapt as each role’s workload changes during RL and therefore leaves a role’s resources underutilized.
+
+    We present PivotRL, an RL post-training system that dynamically shifts resources among different roles according to their runtime demands. PivotRL introduces a resource-shiftable runtime built on a Global Parameter Storage, together with a unified mechanism that efficiently shifts role-specific context. A shift-aware scheduler enables sequence migration upon a shift, while a planner considers the aggregate throughput benefit and the shift overhead to determine when and how to shift. We evaluate PivotRL on a 128-GPU cluster using four model groups spanning dense and mixture-of-experts models. PivotRL enables resource shifting within seconds and improves end-to-end throughput by 1.81–2.05× over colocated deployment and 1.50–1.95× over disaggregated deployment, while preserving RL convergence. Our source code is available at this URL.
+- id: routing
+  year: 2026
+  venue: Preprint
+  title: Harnessing Routing Foresight for Micro-step-level MoE Load Balancing in RL Post-training
+  authors: Yuming Zhou\*, **Haoyang Li**\*, Sheng Lin, Yanfeng Zhao, Tong Zhao, Xupeng Miao, Jie Jiang, Fangcheng
+    Fu, Bin Cui
+  url: https://arxiv.org/abs/2606.11867
+  image: /assets/papers/routing-hero.png
+  figure_pdf: /assets/papers/routing-hero.pdf
+  figure_summary: Using routing foresight to rebalance MoE experts at each micro-step.
+  image_width: 508
+  image_height: 102
+  image_alt: 'ForeMoE Figure 7: micro-step-level reconfiguration and the three-stage expert transfer procedure'
+  contributions: ForeMoE uses routing information from the rollout stage to anticipate expert demand during later
+    RL stages. A hierarchical planner and overlapped expert transfer engine enable frequent micro-step reconfiguration
+    and improve MoE post-training throughput.
+  abstract: |-
+    Mixture-of-Experts (MoE) and reinforcement learning (RL) post-training now dominate large language model (LLM) development, yet expert load imbalance remains a critical challenge. Existing load-balancing systems target pre-training by relying on historical step-level statistics. However, these methods fail under the unique workload dynamics of RL post-training: the step-level load is stable, but the tiny batch sizes processed during micro-steps cause severe, high-frequency load fluctuations.
+
+    We introduce ForeMoE, a micro-step-level load balancing system for MoE RL post-training. Instead of relying on historical statistics, ForeMoE exploits the multi-stage RL pipeline (rollout, recompute, policy update) by using foreseeable routing information from the rollout stage to proactively guide load balancing in the remaining stages. To support frequent per-micro-step reconfiguration, ForeMoE employs a hierarchical planner that decomposes the NP-hard load balancing problem into tractable sub-components, alongside a transfer engine that leverages complementary hardware paths (CPU-assisted and GPU-direct) for overlapped expert transfer. Evaluations on 64 GPUs demonstrate that ForeMoE achieves up to a 1.45× speedup over state-of-the-art RL post-training systems.
+- id: staleflow
+  year: 2026
+  venue: SIGMOD ’27
+  title: 'StaleFlow: Staleness-Aware Data Management for Mitigating Data Skewness in Fully Disaggregated RL Post-Training'
+  authors: '**Haoyang Li**\*, Sheng Lin\*, Fangcheng Fu, Yuming Zhou, Xiaodong Ji, Yanfeng Zhao, Lefeng Wang, Jie
+    Jiang, Bin Cui'
+  url: https://dl.acm.org/doi/10.1145/3837125
+  image: /assets/papers/staleflow-hero.png
+  figure_pdf: /assets/papers/staleflow-hero.pdf
+  figure_summary: Keeping asynchronous RL training balanced while controlling trajectory staleness.
+  image_width: 508
+  image_height: 103
+  image_alt: 'StaleFlow Figure 7: staleness buffer evolution, trajectory reservation, and occupation'
+  contributions: StaleFlow jointly addresses trajectory staleness and workload skew in asynchronous, fully disaggregated
+    RL post-training. It combines a global consistency protocol with trajectory and parameter data servers, achieving
+    higher throughput without compromising convergence.
+  abstract: |-
+    Reinforcement learning (RL) post-training has become pivotal for enhancing the capabilities of modern large models. A recent trend is to develop RL systems with a fully disaggregated architecture, which decouples the three RL phases (rollout, reward, and training) onto separate resources and executes them asynchronously. However, two critical data-level concerns arise: (1) asynchronous execution leads to data staleness in trajectories (the data generated by rollout) as the model parameters used in rollout may not be up to date, which impairs RL convergence; and (2) the length variation of trajectories introduces severe data skewness, leading to workload imbalance and degraded system performance.
+
+    Existing systems fail to address these two concerns in a unified manner. Techniques that tightly control data staleness often constrain effective data skewness mitigation, while aggressive data skewness mitigation tends to exacerbate data staleness. As a result, systems are forced to trade off convergence for performance, or vice versa. To address this, we propose StaleFlow, an RL post-training system that jointly tackles data staleness and skewness. First, to control staleness, StaleFlow introduces a global consistency protocol that tracks the full lifecycle of each trajectory and constrains staleness. Second, to mitigate skewness, StaleFlow re-designs the RL system architecture by constructing data servers for trajectories and parameters to achieve flexible rollout coordination. Subsequently, we develop a suite of staleness-aware, throughput-oriented strategies to enhance system performance. Evaluations show that StaleFlow achieves up to 1.42-2.68× (1.18-1.91× on average) higher throughput than state-of-the-art systems, without compromising convergence. Our source code is available: https://github.com/psrl-project/psrl.
+- id: hetu
+  year: 2025
+  venue: OSDI ’26
+  title: 'Hetu v2: A General and Scalable Deep Learning System with Hierarchical and Heterogeneous Single Program
+    Multiple Data Annotations'
+  authors: '**Haoyang Li**, Fangcheng Fu, Hao Ge, Sheng Lin, Xuanyu Wang, Jiawen Niu, Xupeng Miao, Bin Cui'
+  url: https://www.usenix.org/conference/osdi26/presentation/li-haoyang
+  image: /assets/papers/hetu-hero.png
+  figure_pdf: /assets/papers/hetu-hero.pdf
+  figure_summary: Expressing heterogeneous parallel execution through a unified SPMD program.
+  image_width: 511
+  image_height: 236
+  image_alt: 'Hetu HSPMD Figure 5: full two-column system workflow with graph specialization, graph switching, and
+    code examples'
+  contributions: Hetu v2 extends the SPMD programming model with hierarchical and heterogeneous annotations for
+    modern distributed training. HSPMD handles spatial heterogeneity through graph specialization and temporal heterogeneity
+    through dynamic graph switching.
+  abstract: |-
+    The Single-Program Multiple-Data (SPMD) paradigm provides a unified abstraction to annotate various parallel dimensions in distributed deep learning (DL) training. With SPMD, users can write training programs from the viewpoint of a single device, and the system will automatically deduce the tensor sharding and communication patterns. However, with the recent development in large-scale DL models, distributed training exhibits spatial and temporal workload heterogeneity, arising from both device disparities (e.g., mixed hardware, failures) and data variations (e.g., uneven sequence lengths). Such heterogeneity violates SPMD’s assumption of symmetric workload partitioning, which restricts its ability to express and optimize heterogeneous parallel strategies effectively.
+
+    To address this, we propose HSPMD within the Hetu v2 system to achieve general and scalable DL training. HSPMD extends SPMD’s declarative annotations to support asymmetric sharding and composes standard communication primitives for hierarchical communication, all while retaining the simplicity of a single-device programming model. HSPMD handles spatial heterogeneity through progressive graph specialization, enabling device-specific execution logic, and addresses temporal heterogeneity via dynamic graph switching. Evaluations on (a) heterogeneous devices, (b) unstable devices, and (c) mixed-length data scenarios show that HSPMD matches or outperforms specialized systems, providing a flexible and efficient solution for modern distributed DL training. Code is available: https://github.com/PKU-DAIR/Hetu.
+  venue_note: ChinaSys ’25 Oral
+- id: elastor
+  year: 2025
+  venue: PPoPP ’26
+  title: 'Elastor: Elastic and Efficient Model Partitioning and Checkpointing for Fault-tolerant Distributed DL
+    Training'
+  authors: Xuanyu Wang, Fangcheng Fu, **Haoyang Li**, Hao Ge, Sheng Lin, Jiawen Niu, Bin Cui
+  url: https://dl.acm.org/doi/abs/10.1145/3774934.3786445
+  image: /assets/papers/elastor-hero.png
+  figure_pdf: /assets/papers/elastor-hero.pdf
+  figure_summary: Adapting model partitions and checkpoints to keep training resilient to failures.
+  image_width: 508
+  image_height: 129
+  image_alt: 'Elastor Figures 6 and 7: system architecture and heterogeneous model partitioning with faulty GPUs'
+  contributions: Elastor studies elastic model partitioning and checkpointing for distributed deep learning training
+    that must tolerate failures. The system coordinates partition changes and checkpoint movement so training can
+    recover efficiently as the available devices change.
+  abstract: |-
+    Distributed deep learning (DL) training faces instability from GPU/node failures of multi-GPU clusters, necessitating robust fault recovery from model checkpoints. However, we find that existing works only consider node failures but fail to handle partial GPU unavailability, and they suffer from inefficient model checkpoint saving and loading, particularly when the GPU availability changes.
+
+    This work presents Elastor, a fault-tolerant distributed DL training system featuring elastic and efficient model checkpointing. Firstly, to accommodate partial GPU unavailability, we manage to support heterogeneous model parallel partitioning to elastically resume training with any number of GPUs. Secondly, we devise a partition-agnostic and efficient model checkpointing method via fine-grained tensor splits to achieve seamless transitions across arbitrary partitioning. In addition, Elastor is equipped with a strategy searching algorithm that automatically discovers optimal model partitioning upon recovery as well as a meticulous overlapping design that minimizes the overhead caused by periodic model checkpointing and data preprocessing. Experimental results show that Elastor facilitates quick model checkpointing and failure recovery, while maintaining consistent training efficiency across varying GPU availability. Source code is available at https://github.com/PKU-DAIR/Hetu.
+- id: hydraulis
+  year: 2025
+  venue: SIGMOD ’26
+  title: 'Hydraulis: Balancing Large Transformer Model Training via Co-designing Parallel Strategies and Data Assignment'
+  authors: '**Haoyang Li**, Fangcheng Fu, Sheng Lin, Hao Ge, Xuanyu Wang, Jiawen Niu, Jinbao Xue, Yangyu Tao, Di
+    Wang, Jie Jiang, Bin Cui'
+  url: https://dl.acm.org/doi/10.1145/3769802
+  image: /assets/papers/hydraulis-hero.png
+  figure_pdf: /assets/papers/hydraulis-hero.pdf
+  figure_summary: Co-designing parallel strategies and data placement to balance Transformer training.
+  image_width: 392
+  image_height: 175
+  image_alt: Hydraulis paper figure showing the co-designed training pipeline
+  contributions: Hydraulis co-designs dynamic parallel strategies and data assignment to address sequence-length
+    and packing imbalance in large Transformer training. Its heterogeneous execution plans and two-stage assignment
+    approach improve both per-replica and cross-replica balance.
+  abstract: 'To optimize large Transformer model training, both efficient parallel computing and advanced data management
+    are indispensable. However, current methods often assume a stable and uniform training workload, neglecting
+    data-induced imbalances—arising from both sampling and packing processes—which can impede training performance.
+    Specifically, data sampling imbalance arises from uneven sequence length distribution of the training data,
+    while data packing imbalance stems from the discrepancy between the linear memory complexity and quadratic time
+    complexity of the attention mechanism. To address these imbalance issues, we develop Hydraulis, which jointly
+    optimizes the parallel strategies and data assignment. For one thing, we introduce large model training with
+    dynamic heterogeneous parallel strategies in response to the sequence length variations within and across training
+    iterations. For another, we devise a two-stage data assignment approach, which strikes a good balance in terms
+    of the training workloads both within and across model replicas. Empirical results demonstrate that Hydraulis
+    outperforms existing systems by 1.32-2.66×. Our source code is available: https://github.com/PKU-DAIR/Hetu.'
+- id: malleus
+  year: 2025
+  venue: SIGMOD ’25
+  title: 'Malleus: Straggler-Resilient Hybrid Parallel Training of Large-scale Models via Malleable Data and Model
+    Parallelization'
+  authors: '**Haoyang Li**\*, Fangcheng Fu\*, Hao Ge, Sheng Lin, Xuanyu Wang, Jiawen Niu, Yujie Wang, Hailin Zhang,
+    Xiaonan Nie, Bin Cui'
+  url: https://dl.acm.org/doi/10.1145/3725322
+  image: /assets/papers/malleus-hero.png
+  figure_pdf: /assets/papers/malleus-hero.pdf
+  figure_summary: Reshaping data and model parallelism around stragglers.
+  image_width: 398
+  image_height: 110
+  image_alt: 'Malleus Figure 4: GPU grouping, pipeline orchestration, and model and data work assignment'
+  contributions: Malleus detects stragglers at per-GPU granularity and replans the data, model, and pipeline parallelization
+    when the situation changes. It migrates model state during execution to keep large-scale training efficient
+    and stable.
+  abstract: |-
+    As the scale of models and training data continues to grow, there is an expanding reliance on more GPUs to train large-scale models, which inevitably increases the likelihood of encountering dynamic stragglers that some devices lag behind in performance occasionally. However, hybrid parallel training, one of the de facto paradigms to train large models, is typically sensitive to the stragglers.
+
+    This paper presents Malleus, a straggler-resilient hybrid parallel training framework for large-scale models. Malleus quantifies the stragglers at the nuanced, per-GPU granularity during training, and develops a novel planning algorithm to deduce the optimal parallelization of GPU devices, pipeline stages, model layers, and training data, maximizing training efficiency when stragglers exist. In addition, once a shift in the straggler situation is detected, Malleus adaptively adjusts the parallelization via a re-planning process, and seamlessly and efficiently migrates the model states on the fly, without sacrificing the stability of the training tasks. Empirical results on large language models with up to 110B parameters show that Malleus consistently outperforms existing parallel training frameworks under various straggler situations, delivering on average 2.63-5.28× of efficiency improvement. Source code is available at https://github.com/PKU-DAIR/Hetu.
+- id: lobra
+  year: 2025
+  venue: VLDB ’25
+  title: 'LobRA: Multi-tenant Fine-tuning over Heterogeneous Data'
+  authors: Sheng Lin\*, Fangcheng Fu\*, **Haoyang Li**, Hao Ge, Xuanyu Wang, Jiawen Niu, Yaofeng Tu, Bin Cui
+  url: https://dl.acm.org/doi/10.14778/3742728.3742752
+  image: /assets/papers/lobra-hero.png
+  figure_pdf: /assets/papers/lobra-hero.pdf
+  figure_summary: Sharing fine-tuning infrastructure across tenants with diverse data workloads.
+  image_width: 403
+  image_height: 94
+  image_alt: LobRA paper figure showing multi-tenant LoRA fine-tuning dispatch
+  contributions: LobRA jointly trains multiple LoRA adapters while accounting for sequence-length variation and
+    skewness across fine-tuning tasks. Heterogeneous replicas and dynamic data dispatch reduce the GPU seconds needed
+    for multi-tenant fine-tuning.
+  abstract: |-
+    With the breakthrough of Transformer-based pre-trained models, the demand for fine-tuning (FT) to adapt the base pre-trained models to downstream applications continues to grow, so it is essential for service providers to reduce the cost of processing FT requests. Low-rank adaption (LoRA) is a widely used FT technique that only trains small-scale adapters and keeps the base model unaltered, conveying the possibility of processing multiple FT tasks by jointly training different LoRA adapters with a shared base model.
+
+    Nevertheless, through in-depth analysis, we reveal the efficiency of joint FT is dampened by two heterogeneity issues in the training data — the sequence length variation and skewness. To tackle these issues, we develop LobRA, a brand new framework that supports processing multiple FT tasks by jointly training LoRA adapters. Two innovative designs are introduced. Firstly, LobRA deploys the FT replicas (i.e., model replicas for FT) with heterogeneous resource usages and parallel configurations, matching the diverse workloads caused by the sequence length variation. Secondly, for each training step, LobRA takes account of the sequence length skewness and dispatches the training data among the heterogeneous FT replicas to achieve workload balance. We conduct experiments to assess the performance of LobRA, validating that it significantly reduces the GPU seconds required for joint FT by 45.03%-60.67%.
+- id: sosphotswitch
+  year: 2024
+  venue: SOSP ’24
+  title: Enabling Parallelism Hot Switching for Efficient Training of Large Language Models
+  authors: Hao Ge\*, Fangcheng Fu\*, **Haoyang Li**, Xuanyu Wang, Sheng Lin, Yujie Wang, Xiaonan Nie, Hailin Zhang,
+    Xupeng Miao, Bin Cui
+  url: https://dl.acm.org/doi/10.1145/3694715.3695969
+  image: /assets/papers/hotspa-hero.png
+  figure_pdf: /assets/papers/hotspa-hero.pdf
+  figure_summary: Compiling and orchestrating execution graphs to switch parallelism during training.
+  image_width: 481
+  image_height: 399
+  image_alt: 'HotSPa: complete graph compilation and orchestration workflow, including parameter and gradient hot
+    switching'
+  contributions: This work enables large language model training systems to hot-switch among parallelism configurations
+    as runtime conditions change. The approach reduces the cost of adapting distributed execution while keeping
+    training progress continuous.
+  abstract: |-
+    Training of large-scale deep learning models necessitates parallelizing the model and data across numerous devices, and the choice of parallelism strategy substantially depends on the training workloads such as memory consumption, computation cost, and communication cost. Current approaches generally assume uniform training workloads across samples in a given task. Thus, existing systems are designed to adopt a static parallelism strategy throughout one training process. Nevertheless, when training models with sequence inputs, this assumption fails due to the sequence length variation across samples. Consequently, training with a static parallelism strategy would result in sub-optimal performance.
+
+    In this paper, we first reveal the under-explored fact that the optimal parallelism strategy varies even for the sequences within a single mini-batch. Motivated by this, we present HotSPa, a novel system that adopts multiple parallelism strategies for efficient training with sequence inputs. To be specific, given a mini-batch of training sequences, HotSPa partitions them into multiple groups and applies different parallelism strategies to process each group individually. To enable the hot switching between strategies, HotSPa transfers model parameters and accumulated gradients among the devices on the fly. Significant solutions are proposed with the hope of seamless and rapid parallelism hot switching. Firstly, we design a graph compiler, which generates distributed computation graphs for different parallelism strategies simultaneously, and orchestrates them to share a single model storage backbone. Secondly, we develop a simple yet effective hot switch planner, which heuristically deduces communication plans to accelerate the transition of model partitioning given any pairs of strategies. Extensive experiments on large language model training demonstrate that HotSPa can be up to 2.99× faster than Megatron-LM and DeepSpeed that utilize static parallelism strategies. Source code is available: https://github.com/PKU-DAIR/Hetu.
+- id: diffusion
+  year: 2024
+  venue: AAAI ’24
+  title: Accelerating Text-to-image Editing via Cache-enabled Sparse Diffusion Inference
+  authors: Zihao Yu, **Haoyang Li**, Fangcheng Fu, Xupeng Miao, Bin Cui
+  url: https://ojs.aaai.org/index.php/AAAI/article/view/29599
+  image: /assets/papers/diffusion-hero.png
+  figure_pdf: /assets/papers/diffusion-hero.pdf
+  figure_summary: Reusing cached features to accelerate iterative text-to-image editing.
+  image_width: 406
+  image_height: 220
+  image_alt: FISEdit paper figure showing iterative text-to-image editing
+  contributions: FISEdit accelerates iterative text-to-image editing by identifying the image regions affected by
+    a text change and reusing cached features elsewhere. Its sparse diffusion engine delivers faster inference while
+    maintaining image quality.
+  abstract: |-
+    Due to the recent success of diffusion models, text-to-image generation is becoming increasingly popular and achieves a wide range of applications. Among them, text-to-image editing, or continuous text-to-image generation, attracts lots of attention and can potentially improve the quality of generated images. It’s common to see that users may want to slightly edit the generated image by making minor modifications to their input textual descriptions for several rounds of diffusion inference. However, such an image editing process suffers from the low inference efficiency of many existing diffusion models even using GPU accelerators.
+
+    To solve this problem, we introduce Fast Image Semantically Edit (FISEdit), a cached-enabled sparse diffusion model inference engine for efficient text-to-image editing. The key intuition behind our approach is to utilize the semantic mapping between the minor modifications on the input text and the affected regions on the output image. For each text editing step, FISEdit can 1) automatically identify the affected image regions and 2) utilize the cached unchanged regions’ feature map to accelerate the inference process. For the former, we measure the differences between cached and ad hoc feature maps given the modified textual description, extract the region with significant differences, and capture the affected region by masks. For the latter, we develop an efficient sparse diffusion inference engine that only computes the feature maps for the affected region while reusing the cached statistics for the rest of the image. Finally, extensive empirical results show that FISEdit can be 3.4× and 4.4× faster than existing methods on NVIDIA TITAN RTX and A100 GPUs respectively, and even generates more satisfactory images.
+  venue_note: MLSys Workshop · NeurIPS ’23

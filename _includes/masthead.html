@@ -1,23 +1,15 @@
-{% include base_path %}
-
 <div class="masthead">
   <div class="masthead__inner-wrap">
-    <div class="masthead__menu">
-      <nav id="site-nav" class="greedy-nav">
-        <button><div class="navicon"></div></button>
-        <ul class="visible-links">
-          <li class="masthead__menu-item masthead__menu-item--lg"><a href="{{ base_path }}/">{{ site.title }}</a></li>
-          {% for link in site.data.navigation.main %}
-            {% if link.url contains 'http' %}
-              {% assign domain = '' %}
-              {% else %}
-              {% assign domain = base_path %}
-            {% endif %}
-            <li class="masthead__menu-item"><a href="{{ domain }}{{ link.url }}">{{ link.title }}</a></li>
-          {% endfor %}
-        </ul>
-        <ul class="hidden-links hidden"></ul>
-      </nav>
-    </div>
+    <nav class="portfolio-nav" aria-label="Main navigation">
+      <a class="site-brand" href="{{ site.baseurl }}/" aria-label="Haoyang Li — Home">
+        <img class="site-brand__monogram" src="{{ '/images/li-monogram.svg?v=20261017' | relative_url }}" width="64" height="64" alt="" aria-hidden="true">
+        <span class="site-brand__name">Haoyang Li<span>Homepage</span></span>
+      </a>
+      <div class="portfolio-nav__links">
+        {% for link in site.data.navigation.main %}
+        <a href="{% unless link.url contains 'http' %}{{ site.baseurl }}{% endunless %}{{ link.url }}"{% if page.permalink == link.url %} aria-current="page"{% endif %}>{{ link.title }} <span aria-hidden="true">↗</span></a>
+        {% endfor %}
+      </div>
+    </nav>
   </div>
 </div>
