@@ -46,7 +46,7 @@ redirect_from:
           <span class="github-repo__stars"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m12 3 2.8 5.7 6.3.9-4.55 4.43 1.07 6.27L12 17.34l-5.62 2.96 1.07-6.27L2.9 9.6l6.3-.9Z"/></svg><span data-star-count>343</span></span>
         </a>
       </div>
-      <figure class="project-card__visual"><img src="{{ '/assets/projects/hetu-project.svg' | relative_url }}" alt="Hetu framework overview: training systems, parallelism, runtime, and compute backends" width="552" height="354" loading="lazy"><figcaption>Architecture of Hetu.</figcaption></figure>
+      <details class="project-architecture"><summary>Architecture of Hetu <span aria-hidden="true">+</span></summary><figure class="project-card__visual"><img src="{{ '/assets/projects/hetu-project.svg' | relative_url }}" alt="Hetu framework overview: training systems, parallelism, runtime, and compute backends" width="552" height="354" loading="lazy"></figure></details>
     </article>
     <article class="project-card project-card--psrl">
       <div class="project-card__body">
@@ -64,6 +64,7 @@ redirect_from:
   </div>
 </section>
 
+<div class="home-background">
 <section class="home-section" id="education" aria-labelledby="education-heading">
   <div class="section-heading"><span class="section-heading__index">02 /</span><h2 id="education-heading">Education</h2></div>
   <div class="education-list">
@@ -85,6 +86,8 @@ redirect_from:
     <div class="award-entry"><span class="entry-date">2018</span><span>First Prize · NOIP (National Olympiad in Informatics in Provinces), Improvement Group <span class="award-note">（信息竞赛省一）</span></span></div>
   </div>
 </section>
+
+</div>
 
 {% include visitor-map.html %}
 

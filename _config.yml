@@ -137,6 +137,8 @@ exclude:
   - Gruntfile.js
   - LICENSE
   - README
+  - BLOGGING.md
+  - scripts
   - Rakefile
   - assets/js/_main.js
   - assets/js/plugins
@@ -177,6 +179,9 @@ kramdown:
 
 # Collections
 collections:
+  blog:
+    output: true
+    permalink: /blog/:path/
   teaching:
     output: true
     permalink: /:collection/:path/
@@ -193,6 +198,13 @@ collections:
 
 # Defaults
 defaults:
+  # Technical articles in _blog
+  - scope:
+      path: ""
+      type: blog
+    values:
+      layout: blog-post
+      author_profile: false
   # _posts
   - scope:
       path: ""

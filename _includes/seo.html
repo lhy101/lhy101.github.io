@@ -116,7 +116,7 @@
   </script>
 {% endif %}
 
-{% if page.layout == 'portfolio' %}
+{% if page.layout == 'portfolio' or page.layout == 'blog-post' %}
   {% include profile-seo.html %}
 {% elsif site.social %}
   <script type="application/ld+json">

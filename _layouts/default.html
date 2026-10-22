@@ -5,13 +5,13 @@ layout: compress
 {% include base_path %}
 
 <!doctype html>
-<html lang="{{ site.locale | slice: 0,2 }}" class="no-js">
+<html lang="{{ page.lang | default: site.locale | replace: '_', '-' }}" class="no-js">
   <head>
     {% include head.html %}
     {% include head/custom.html %}
   </head>
 
-  <body{% if page.layout == 'portfolio' %} class="portfolio-site"{% endif %}>
+  <body{% if page.layout == 'portfolio' or page.layout == 'blog-post' %} class="portfolio-site"{% endif %}>
 
     {% include browser-upgrade.html %}
     {% include masthead.html %}
@@ -20,7 +20,7 @@ layout: compress
 
     <div class="page__footer">
       <footer>
-        {% if page.layout == 'portfolio' %}
+        {% if page.layout == 'portfolio' or page.layout == 'blog-post' %}
           {% include portfolio-footer.html %}
         {% else %}
           {% include footer/custom.html %}

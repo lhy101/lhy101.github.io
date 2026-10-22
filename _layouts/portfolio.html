@@ -2,7 +2,7 @@
 layout: default
 ---
 
-<main id="main" class="portfolio-main {% if page.permalink == '/' %}portfolio-main--home{% else %}portfolio-main--publications{% endif %}">
+<main id="main" class="portfolio-main {% if page.permalink == '/' %}portfolio-main--home{% elsif page.permalink == '/blog/' %}portfolio-main--blog{% else %}portfolio-main--publications{% endif %}">
   {% unless page.permalink == '/' %}
   <header class="portfolio-page-heading">
     <a href="{{ site.baseurl }}/" class="back-link">← Back to home</a>

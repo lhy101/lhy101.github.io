@@ -1,10 +1,11 @@
-<meta property="og:type" content="website">
-<meta property="og:image" content="{{ '/images/personal.png' | absolute_url }}">
-<meta property="og:image:alt" content="Haoyang Li, Peking University">
-<meta name="twitter:card" content="summary">
+{% assign share_image = page.cover | default: '/images/personal.png' %}
+{% unless page.date %}<meta property="og:type" content="website">{% endunless %}
+<meta property="og:image" content="{{ share_image | absolute_url }}">
+<meta property="og:image:alt" content="{{ page.cover_alt | default: 'Haoyang Li, Peking University' | escape }}">
+<meta name="twitter:card" content="{% if page.cover %}summary_large_image{% else %}summary{% endif %}">
 <meta name="twitter:title" content="{{ seo_title | escape }}">
 <meta name="twitter:description" content="{{ seo_description }}">
-<meta name="twitter:image" content="{{ '/images/personal.png' | absolute_url }}">
+<meta name="twitter:image" content="{{ share_image | absolute_url }}">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -31,10 +32,18 @@
       "author": { "@id": "{{ '/' | absolute_url }}#haoyang-li" }
     },
     {
-      "@type": "{% if page.permalink == '/' %}ProfilePage{% else %}CollectionPage{% endif %}",
+      "@type": "{% if page.layout == 'blog-post' %}BlogPosting{% elsif page.permalink == '/' %}ProfilePage{% else %}CollectionPage{% endif %}",
       "@id": {{ page.url | absolute_url | jsonify }},
       "url": {{ page.url | absolute_url | jsonify }},
       "name": {{ page.title | jsonify }},
+      {% if page.layout == 'blog-post' %}
+      "headline": {{ page.title | jsonify }},
+      "description": {{ page.description | jsonify }},
+      "inLanguage": {{ page.lang | jsonify }},
+      "datePublished": "{{ page.date | date: '%Y-%m-%d' }}",
+      "image": {{ page.cover | absolute_url | jsonify }},
+      "author": { "@id": "{{ '/' | absolute_url }}#haoyang-li" },
+      {% endif %}
       "isPartOf": { "@id": "{{ '/' | absolute_url }}#website" },
       "{% if page.permalink == '/' %}mainEntity{% else %}about{% endif %}": { "@id": "{{ '/' | absolute_url }}#haoyang-li" }
     }

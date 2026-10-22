@@ -7,7 +7,7 @@
       </a>
       <div class="portfolio-nav__links">
         {% for link in site.data.navigation.main %}
-        <a href="{% unless link.url contains 'http' %}{{ site.baseurl }}{% endunless %}{{ link.url }}"{% if page.permalink == link.url %} aria-current="page"{% endif %}>{{ link.title }} <span aria-hidden="true">↗</span></a>
+        <a href="{% unless link.url contains 'http' %}{{ site.baseurl }}{% endunless %}{{ link.url }}"{% if page.permalink == link.url %} aria-current="page"{% elsif page.collection == 'blog' and link.url == '/blog/' %} aria-current="page"{% endif %}>{{ link.title }}</a>
         {% endfor %}
       </div>
     </nav>
