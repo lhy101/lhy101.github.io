@@ -177,7 +177,9 @@ body { padding-bottom: 0; font-family: var(--font-body); letter-spacing: 0; }
 .blog-article__content .highlighter-rouge::before, .blog-article__content figure.highlight::before { content: none; }
 .blog-article__content .highlighter-rouge .highlight, .blog-article__content figure.highlight .highlight { margin: 0; font-size: .88rem; line-height: 1.6; }
 .blog-article__content pre code { padding: 0; border: 0; background: transparent; color: inherit; font-size: inherit; line-height: inherit; overflow-wrap: normal; word-break: normal; white-space: pre; }
-.blog-article__content table { display: block; width: 100%; overflow-x: auto; margin: 1.1rem 0 1.5rem; border-collapse: collapse; font-size: .84rem; line-height: 1.55; }
+.blog-article__content .blog-table-scroll { max-width: 100%; overflow-x: auto; margin: 1.1rem 0 1.5rem; }
+.blog-article__content table { width: 100%; margin: 0; border: 0; border-collapse: collapse; font-size: .84rem; line-height: 1.55; overflow-wrap: normal; }
+.blog-article__content table code { white-space: nowrap; }
 .blog-article__content th, .blog-article__content td { min-width: 5rem; padding: .55rem .65rem; border: 1px solid var(--line); }
 .blog-article__content th { background: #f2f4ef; color: var(--ink); font-weight: 650; }
 .blog-article__content hr { width: 100%; margin: 2rem 0; border: 0; border-top: 1px solid var(--line); }

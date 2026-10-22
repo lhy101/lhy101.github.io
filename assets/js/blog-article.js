@@ -57,6 +57,18 @@
     link.append(image);
   });
 
+  // Keep table borders on the cells and scroll within the article's margins.
+  article.querySelectorAll('table').forEach(table => {
+    if (table.closest('.blog-table-scroll')) return;
+    const scroll = document.createElement('div');
+    scroll.className = 'blog-table-scroll';
+    scroll.tabIndex = 0;
+    scroll.setAttribute('role', 'region');
+    scroll.setAttribute('aria-label', '表格（可横向滚动）');
+    table.before(scroll);
+    scroll.append(table);
+  });
+
   const revealTarget = () => {
     let id;
     try { id = decodeURIComponent(window.location.hash.slice(1)); } catch { return; }
