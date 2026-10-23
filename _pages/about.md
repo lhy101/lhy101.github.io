@@ -65,16 +65,8 @@ redirect_from:
 </section>
 
 <div class="home-background">
-<section class="home-section" id="education" aria-labelledby="education-heading">
-  <div class="section-heading"><span class="section-heading__index">02 /</span><h2 id="education-heading">Education</h2></div>
-  <div class="education-list">
-    <article class="education-entry"><span class="entry-date">2024—present</span><div><h3>Peking University</h3><p>Ph.D. in Computer Science</p><p class="entry-note">Advisor: Prof. Bin Cui · PKU DAIR Lab</p></div></article>
-    <article class="education-entry"><span class="entry-date">2020—2024</span><div><h3>Peking University</h3><p>Bachelor in Computing Science</p></div></article>
-  </div>
-</section>
-
 <section class="home-section" id="awards" aria-labelledby="awards-heading">
-  <div class="section-heading"><span class="section-heading__index">03 /</span><h2 id="awards-heading">Selected awards</h2></div>
+  <div class="section-heading"><span class="section-heading__index">02 /</span><h2 id="awards-heading">Selected awards</h2></div>
   <div class="awards-list">
     <div class="award-entry award-entry--featured"><span class="entry-date">2026</span><a href="https://www.cie.org.cn/list_43/16649.html">CIE–Tencent Ph.D. Student Research Incentive Program <span class="award-track">Hunyuan Foundation Model Track</span></a><span aria-hidden="true">↗</span></div>
     <div class="award-entry award-entry--featured"><span class="entry-date">2026</span><a href="https://cs.pku.edu.cn/info/1022/5800.htm">Peking University Presidential Scholarship</a><span aria-hidden="true">↗</span></div>
@@ -87,8 +79,15 @@ redirect_from:
   </div>
 </section>
 
-</div>
+<section class="home-section" id="education" aria-labelledby="education-heading">
+  <div class="section-heading"><span class="section-heading__index">03 /</span><h2 id="education-heading">Education</h2></div>
+  <div class="education-list">
+    <article class="education-entry"><span class="entry-date">2024—present</span><div><h3>Peking University</h3><p>Ph.D. in Computer Science</p><p class="entry-note">Advisor: Prof. Bin Cui · PKU DAIR Lab</p></div></article>
+    <article class="education-entry"><span class="entry-date">2020—2024</span><div><h3>Peking University</h3><p>Bachelor in Computing Science</p></div></article>
+  </div>
+  {% include visitor-map.html %}
+</section>
 
-{% include visitor-map.html %}
+</div>
 
 <script src="{{ '/assets/js/github-stars.js' | relative_url }}" defer></script>

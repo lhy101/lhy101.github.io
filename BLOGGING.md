@@ -33,6 +33,28 @@ series: "可选的系列名称"
 - 独立公式使用单独一行的 `$$` 包裹，公式块前后各留一空行，避免被解析成行内公式。不需要编号时，在公式块内使用 `\begin{equation*}` 和 `\end{equation*}`。
 - `lang` 可改为 `en`；`series` 可省略。
 
+## 阅读量统计（可选）
+
+本站使用 GoatCounter 的公开阅读量接口，按文章 URL 统计页面访问次数。在
+GoatCounter 创建站点并开启 **Allow adding visitor counts on your website** 后，
+将站点的 `/count` 地址填写到 `_data/blog_counter.yml` 中的 `endpoint`：
+
+```yaml
+endpoint: "https://lhygood11229.goatcounter.com/count"
+```
+
+部署后，文章页和博客列表会显示各自的阅读量。打开文章才会记录一次访问，
+博客列表只读取各篇文章的计数。新文章会自动接入，不必单独配置。
+
+- 这里显示页面访问量，不代表独立读者数或完整读完的人数。
+- 接入前的历史访问无法追溯；修改文章 URL 会影响计数归属，应保持 permalink 稳定。
+- 公开计数接口可能缓存最多 4 小时，因此刷新后数字不一定立即变化。
+- 留空会关闭计数；本地预览及其他域名不会请求统计服务。
+- 新文章尚无数据、接口未开放、网络失败或被拦截时，计数会隐藏，不显示虚构的 0。
+- 不需要在仓库里填写 API Key 或密码。统计数据及维护由配置的 GoatCounter 站点提供。
+
+服务说明见 <https://www.goatcounter.com/help/visitor-counter>。
+
 ## 第一篇文章的来源
 
 `_blog/async-rl-staleness.md` 来自博客工作目录中的

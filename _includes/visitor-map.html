@@ -1,7 +1,7 @@
 {% assign visitor_map_id = site.data.visitor_map.site_id | default: '' | strip %}
 {% if visitor_map_id != '' %}
-<section class="visitor-map" aria-labelledby="visitor-map-heading" data-visitor-map data-site-id="{{ visitor_map_id | escape }}" data-site-host="{{ site.url | remove: 'https://' | remove: 'http://' | split: '/' | first }}">
-  <div class="visitor-map__intro"><p class="eyebrow">Around the world</p><h2 id="visitor-map-heading">Visitors</h2><p>Thank you for stopping by.</p></div>
+<section class="visitor-map" aria-labelledby="visitor-map-heading" data-visitor-map data-site-id="{{ visitor_map_id | escape }}" data-stats-url="{{ site.data.visitor_map.stats_url | escape }}" data-site-host="{{ site.url | remove: 'https://' | remove: 'http://' | split: '/' | first }}">
+  <div class="visitor-map__intro"><h3 id="visitor-map-heading">Visitors</h3><p>Thank you for stopping by.</p></div>
   <div class="visitor-map__canvas" data-visitor-map-canvas><span class="visitor-map__fallback">Visitor map</span></div>
 </section>
 <script src="{{ '/assets/js/visitor-map.js' | relative_url }}" defer></script>

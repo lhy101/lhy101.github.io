@@ -8,10 +8,16 @@
     return;
   }
   var canvas = map.querySelector('[data-visitor-map-canvas]');
-  var script = document.createElement('script');
-  script.id = 'clustrmaps';
-  script.async = true;
-  script.src = 'https://cdn.clustrmaps.com/map_v2.js?d=' + encodeURIComponent(map.dataset.siteId) + '&cl=426951&w=a&t=tt&co=ffffff&cmo=426951&cmn=a6b99c&ct=657169';
-  script.onerror = function () { map.hidden = true; };
-  canvas.appendChild(script);
+  var mapQuery = '?d=' + encodeURIComponent(map.dataset.siteId) + '&cl=ffffff';
+  // The official image embed scales with the column and links to full statistics.
+  var link = document.createElement('a');
+  link.href = map.dataset.statsUrl || 'https://mapmyvisitors.com/';
+  link.title = 'Visitor statistics';
+  var image = document.createElement('img');
+  image.alt = 'World map of visitors to this website';
+  image.decoding = 'async';
+  image.onload = function () { canvas.replaceChildren(link); };
+  image.onerror = function () { map.hidden = true; };
+  link.appendChild(image);
+  image.src = 'https://mapmyvisitors.com/map.png' + mapQuery;
 })();

@@ -1,0 +1,4 @@
+{% assign counter_endpoint = site.data.blog_counter.endpoint | default: '' | strip %}
+{% if counter_endpoint != '' %}
+<script src="{{ '/assets/js/blog-views.js' | relative_url }}" defer data-counter-endpoint="{{ counter_endpoint | escape }}" data-site-url="{{ site.url | escape }}"></script>
+{% endif %}

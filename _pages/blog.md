@@ -12,6 +12,7 @@ author_profile: false
 </div>
 
 <div class="blog-list">
+  {% assign counter_endpoint = site.data.blog_counter.endpoint | default: '' | strip %}
   {% assign articles = site.blog | sort: 'date' | reverse %}
   {% for post in articles %}
   <article class="blog-card" lang="{{ post.lang | default: 'en' }}">
@@ -22,8 +23,12 @@ author_profile: false
       <p class="blog-card__meta">{% if post.series %}<span>{{ post.series }}</span>{% endif %}<time datetime="{{ post.date | date: '%Y-%m-%d' }}">{{ post.date | date: '%Y.%m.%d' }}</time></p>
       <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
       <p class="blog-card__excerpt">{{ post.description }}</p>
-      <a class="blog-card__read" href="{{ post.url | relative_url }}">阅读全文 <span aria-hidden="true">→</span></a>
+      <div class="blog-card__footer">
+        <a class="blog-card__read" href="{{ post.url | relative_url }}">阅读全文 <span aria-hidden="true">→</span></a>
+        {% if counter_endpoint != '' %}<span class="blog-view-count" data-blog-views data-blog-path="{{ post.url | relative_url | escape }}" title="页面访问量，非独立读者数；统计可能延迟更新" hidden>阅读量 <span data-blog-views-count></span></span>{% endif %}
+      </div>
     </div>
   </article>
   {% endfor %}
 </div>
+{% include blog-counter.html %}

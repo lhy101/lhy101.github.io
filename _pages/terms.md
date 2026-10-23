@@ -34,6 +34,8 @@ Third-party advertisers may also place and read cookies on your browser and/or u
 
 If you wish to disable cookies, you may do so through your web browser options. Instructions for doing so can be found on the specific web browsers' websites.
 
-#### Google Analytics
+#### GoatCounter
 
-Google Analytics is a web analytics tool I use to help understand how visitors engage with this website. It reports website trends using cookies and web beacons without identifying individual visitors. You can read [Google Analytics Privacy Policy](http://www.google.com/analytics/learn/privacy.html).
+This site uses [GoatCounter](https://www.goatcounter.com/) to count blog page views and display per-article totals. Visiting a blog post sends its page path and request information to the configured GoatCounter site. See [GoatCounter's privacy policy](https://www.goatcounter.com/help/privacy) for details about its data collection and handling.
+
+The homepage also embeds a visitor map provided by MapMyVisitors. Loading the map may send request and connection information, including an approximate location, to that provider.

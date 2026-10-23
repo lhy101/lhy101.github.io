@@ -1,0 +1,3 @@
+# Enable “Allow adding visitor counts on your website” in GoatCounter settings.
+# Public endpoint; no credentials or API key belong in this file.
+endpoint: "https://lhygood11229.goatcounter.com/count"
