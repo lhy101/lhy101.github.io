@@ -2,8 +2,8 @@
 layout: portfolio
 permalink: /
 title: "Haoyang Li"
-seo_title: "Haoyang Li | Peking University (PKU) | AI Systems"
-excerpt: "Haoyang Li is a Ph.D. student in Computer Science at Peking University (PKU), advised by Prof. Bin Cui. Research in deep learning training and reinforcement learning post-training systems."
+seo_title: "Haoyang Li (Peking University)"
+excerpt: "Haoyang Li is a Computer Science Ph.D. student at Peking University (PKU), researching deep learning training and reinforcement learning systems with Prof. Bin Cui."
 author_profile: false
 redirect_from:
   - /about/

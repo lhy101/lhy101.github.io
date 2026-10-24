@@ -8,16 +8,56 @@
     return;
   }
   var canvas = map.querySelector('[data-visitor-map-canvas]');
-  var mapQuery = '?d=' + encodeURIComponent(map.dataset.siteId) + '&cl=ffffff';
-  // The official image embed scales with the column and links to full statistics.
-  var link = document.createElement('a');
-  link.href = map.dataset.statsUrl || 'https://mapmyvisitors.com/';
-  link.title = 'Visitor statistics';
-  var image = document.createElement('img');
-  image.alt = 'World map of visitors to this website';
-  image.decoding = 'async';
-  image.onload = function () { canvas.replaceChildren(link); };
-  image.onerror = function () { map.hidden = true; };
-  link.appendChild(image);
-  image.src = 'https://mapmyvisitors.com/map.png' + mapQuery;
+  var status = map.querySelector('[data-visitor-map-status]');
+  var retry = map.querySelector('[data-visitor-map-retry]');
+  var imageUrl = 'https://mapmyvisitors.com/map.png?d=' + encodeURIComponent(map.dataset.siteId) + '&cl=ffffff';
+  var attempts = 0;
+  var activeImage;
+  var timer;
+
+  function loadMap() {
+    attempts += 1;
+    var image = document.createElement('img');
+    activeImage = image;
+    status.textContent = 'Loading visitor map…';
+    status.hidden = false;
+    retry.hidden = true;
+    image.alt = 'World map of visitors to this website';
+    image.decoding = 'async';
+
+    function failed() {
+      if (activeImage !== image) return;
+      activeImage = null;
+      window.clearTimeout(timer);
+      image.onload = image.onerror = null;
+      image.removeAttribute('src');
+      if (attempts < 2) {
+        timer = window.setTimeout(loadMap, 1000);
+      } else {
+        status.textContent = 'Visitor map temporarily unavailable.';
+        retry.hidden = false;
+      }
+    }
+
+    image.onload = function () {
+      if (activeImage !== image) return;
+      activeImage = null;
+      window.clearTimeout(timer);
+      var link = document.createElement('a');
+      link.href = map.dataset.statsUrl;
+      link.title = 'Visitor statistics';
+      link.appendChild(image);
+      canvas.replaceChildren(link);
+      canvas.hidden = false;
+      status.hidden = true;
+      retry.hidden = true;
+    };
+    image.onerror = failed;
+    // A stalled third-party request must not leave a permanent loading state.
+    timer = window.setTimeout(failed, 8000);
+    image.src = imageUrl + (attempts > 1 ? '&retry=' + Date.now() : '');
+  }
+
+  retry.addEventListener('click', loadMap);
+  loadMap();
 })();

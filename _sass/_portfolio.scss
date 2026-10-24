@@ -225,8 +225,13 @@ body { padding-bottom: 0; font-family: var(--font-body); letter-spacing: 0; }
 .visitor-map__canvas { overflow: hidden; text-align: center; background: #fff; }
 .visitor-map__canvas img, .visitor-map__canvas canvas { display: block; max-width: 100%; height: auto; margin: 0 auto; }
 .visitor-map__canvas iframe { max-width: 100%; }
-.visitor-map__fallback { color: var(--ink-soft); font-size: .85rem; }
-.visitor-map__canvas:has(img, iframe) .visitor-map__fallback { display: none; }
+.visitor-map [hidden] { display: none !important; }
+.visitor-map__status { margin: .65rem 0; color: var(--ink-soft); font-size: .82rem; line-height: 1.5; }
+.visitor-map__actions { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem .8rem; margin-top: .65rem; }
+.visitor-map__fallback-link { display: inline-flex; align-items: center; gap: .25rem; color: var(--accent-dark); font-size: .84rem; }
+.visitor-map__fallback-link:hover { color: var(--accent); text-decoration: underline; text-underline-offset: .2em; }
+.visitor-map__retry { margin: 0; padding: 0; border: 0; background: none; color: var(--accent-dark); font: inherit; font-size: .84rem; text-decoration: underline; text-underline-offset: .2em; cursor: pointer; }
+.visitor-map__retry:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
 @media (max-width: 820px) {
   .home-hero { grid-template-columns: minmax(0, 1fr) 132px; gap: 1.5rem; }

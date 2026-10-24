@@ -7,10 +7,10 @@
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Haoyang Li | Peking University (PKU)"
+title                    : "Haoyang Li (Peking University)"
 title_separator          : "-"
 name                     : &name "Haoyang Li"
-description              : &description "Haoyang Li is a Ph.D. student in Computer Science at Peking University (PKU), advised by Prof. Bin Cui. Research in deep learning training and reinforcement learning post-training systems."
+description              : &description "Haoyang Li is a Computer Science Ph.D. student at Peking University (PKU), researching deep learning training and reinforcement learning systems with Prof. Bin Cui."
 url                      : https://lhy101.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "lhy101/lhy101.github.io"
@@ -150,6 +150,33 @@ exclude:
   - package.json
   - tmp
   - vendor
+  # Remove the template's demo content from the published site and sitemap.
+  - _posts
+  - _portfolio
+  - _talks
+  - _teaching
+  - _pages/archive-layout-with-content.md
+  - _pages/category-archive.html
+  - _pages/collection-archive.html
+  - _pages/markdown.md
+  - _pages/non-menu-page.md
+  - _pages/page-archive.html
+  - _pages/portfolio.html
+  - _pages/tag-archive.html
+  - _pages/talkmap.html
+  - _pages/talks.html
+  - _pages/teaching.html
+  - _pages/year-archive.html
+  # Source documentation and tooling do not belong in search results.
+  - README.md
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - assets/fonts/portfolio/README.md
+  - assets/papers/README.md
+  - markdown_generator
+  - talkmap
+  - talkmap.ipynb
+  - talkmap.py
 keep_files:
   - .git
   - .svn
@@ -198,6 +225,11 @@ collections:
 
 # Defaults
 defaults:
+  # Paper figures are supporting assets, not standalone pages to index.
+  - scope:
+      path: "assets"
+    values:
+      sitemap: false
   # Technical articles in _blog
   - scope:
       path: ""

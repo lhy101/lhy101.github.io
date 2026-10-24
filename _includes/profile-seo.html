@@ -14,7 +14,9 @@
       "@type": "Person",
       "@id": "{{ '/' | absolute_url }}#haoyang-li",
       "name": "Haoyang Li",
-      "alternateName": ["Haoyang Li (PKU)", "lhy101"],
+      "alternateName": ["Haoyang Li (Peking University)", "Haoyang Li (PKU)", "lhy101"],
+      "givenName": "Haoyang",
+      "familyName": "Li",
       "url": {{ '/' | absolute_url | jsonify }},
       "image": {{ '/images/personal.png' | absolute_url | jsonify }},
       "jobTitle": "Ph.D. student in Computer Science",
@@ -26,7 +28,8 @@
     {
       "@type": "WebSite",
       "@id": "{{ '/' | absolute_url }}#website",
-      "name": "Haoyang Li | Peking University (PKU)",
+      "name": {{ site.title | jsonify }},
+      "alternateName": "Haoyang Li",
       "url": {{ '/' | absolute_url | jsonify }},
       "inLanguage": "en",
       "author": { "@id": "{{ '/' | absolute_url }}#haoyang-li" }
