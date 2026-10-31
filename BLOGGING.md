@@ -59,7 +59,7 @@ endpoint: "https://lhygood11229.goatcounter.com/count"
 
 `_blog/async-rl-staleness.md` 来自博客工作目录中的
 `async-rl-staleness-blog.zh-CN.md`。正文只调整了图片路径和折叠区的
-Markdown 解析属性，并将独立公式设为不编号的居中公式。三张正文 PNG 保留原图；列表封面为框架对比图的独立裁切版。
+Markdown 解析属性，并将独立公式设为不编号的居中公式。正文优先使用文字已转为矢量路径的 SVG，同时保留 2560 px 宽的 PNG；列表封面为框架对比图的高清独立裁切版。
 
 如需同步原文章，运行（需要 Python 和 Pillow）：
 
@@ -68,6 +68,24 @@ python scripts/import-staleness-blog.py 'C:\Users\lihaoyang\Desktop\workspace\bl
 ```
 
 导入会更新该文章及其配图、封面。其他博客不受影响。确认源文章与配图后再运行。
+
+## 同步 staleness 系列（一）和（三）
+
+原命令仍只导入（一）。同时更新两篇时运行：
+
+```powershell
+python scripts/import-staleness-blog.py 'C:\Users\lihaoyang\Desktop\workspace\blog' --article all
+```
+
+只导入（三）时使用 `--article psrl-staleness`，只导入（一）也可以显式使用 `--article async-rl-staleness`。
+
+（三）保存在 `_blog/psrl-staleness.md`，地址为 `/blog/psrl-staleness/`，日期为 2026-10-31。导入保留原文内容、公式、折叠区和媒体结构，并迁移交互动画所需的页面与图层。动画播放器位于该文章资源目录的 `animation/index.html`，文章会按播放器发送的高度自动调整 iframe。
+
+（三）的列表封面使用 `cover.svg`，来自 blog 工作区的 `protocol-cover.svg`，逻辑尺寸 1280 × 720，同时保留 2560 × 1440 的 PNG。它由 `scripts/draw_psrl_cover.py` 基于正文协议图的绘图组件生成，保留原有正文图片。更新封面后再运行导入命令。
+
+每篇文章的资源目录包含 `import-manifest.json`，记录源文 SHA-256 与复制资源的 SHA-256。导入只复制正文、封面和动画实际需要的文件，不复制实验源码、角色素材或检查截图。
+
+导入后可运行 `python scripts/check-staleness-imports.py 'C:\Users\lihaoyang\Desktop\workspace\blog'`，核对正文、公式、资源哈希和动画路径。
 
 ## 本地构建
 

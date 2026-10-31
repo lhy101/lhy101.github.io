@@ -1,0 +1,13 @@
+{
+  "source": "async-rl-staleness-blog.zh-CN.md",
+  "source_sha256": "87ce9b91af5d925265aa36346b6cb976820f34ee15ca29db92d55ebe616c723d",
+  "figures": 3,
+  "copied_assets": {
+    "staleness-origin.svg": "d694226c1d37fea02d85f92295f3809babb2854229dd70aea916a3590102c37a",
+    "staleness-origin.png": "d945b82fd563dff235d3cce0f93e397af5c7824ab12f4ae260d98f3e49753a16",
+    "systems-layer-map.svg": "8da145c0be59c60c448847ad97ab7d06d744fc58bffe74514cdefc45e4da9c78",
+    "systems-layer-map.png": "7d1c79f0a4dafc730578e52791a6d0d3189964209559085fea566d0cc3ffc9f3",
+    "three-layer-control.svg": "385ac9cbe1189f09ec98ae8348f0acce82a5a03d64810bde73fd29b45adc9551",
+    "three-layer-control.png": "9fe48d8c6b69ddacfd0fe851164cf6002bbdacd8906066621f7086ed518e8bdc"
+  }
+}

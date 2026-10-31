@@ -3,14 +3,14 @@
   const toc = document.querySelector('.blog-toc');
   if (!article || !toc) return;
 
-  const headings = [...article.querySelectorAll('h2, h3, h4, details.framework-detail > summary')];
+  const headings = [...article.querySelectorAll('h2, h3, h4, details:is(.framework-detail, .protocol-detail) > summary')];
   const uniqueId = base => {
     let id = base;
     let suffix = 2;
     while (document.getElementById(id)) id = `${base}-${suffix++}`;
     return id;
   };
-  const disclosures = [...article.querySelectorAll('details.framework-detail')];
+  const disclosures = [...article.querySelectorAll('details:is(.framework-detail, .protocol-detail)')];
   disclosures.forEach((detail, index) => {
     detail.id ||= uniqueId(`framework-${index + 1}`);
   });
@@ -43,6 +43,15 @@
   // Keep the title first while giving long articles a compact, optional outline.
   article.querySelector('h1')?.after(toc);
   toc.hidden = headings.length === 0;
+
+  const protocolFrame = article.querySelector('iframe.protocol-player');
+  if (protocolFrame) {
+    window.addEventListener('message', event => {
+      if (event.origin !== window.location.origin || event.source !== protocolFrame.contentWindow) return;
+      if (event.data?.type !== 'protocol-player-height' || !Number.isFinite(event.data.height)) return;
+      protocolFrame.style.height = `${Math.max(280, Math.min(1600, event.data.height))}px`;
+    });
+  }
 
   article.querySelectorAll('img').forEach(image => {
     if (image.closest('a')) return;

@@ -168,6 +168,7 @@ body { padding-bottom: 0; font-family: var(--font-body); letter-spacing: 0; }
 .blog-article__content p { margin: 0 0 1rem; font-size: inherit; line-height: inherit; }
 .blog-article__content ul, .blog-article__content ol { margin: 0 0 1.1rem; padding-left: 1.5rem; }
 .blog-article__content li { margin: .3rem 0; }
+.blog-article__content iframe.protocol-player { display: block; width: 100%; max-width: 100%; border: 0; margin: 1.25rem 0; }
 .blog-article__content figure { margin: 1.35rem 0 1.55rem; padding: .7rem; border: 1px solid #edf0eb; border-radius: 8px; background: #fff; }
 .blog-article__content img { display: block; width: 100%; height: auto; margin: 0; border-radius: 3px; }
 .blog-article__content .blog-figure { display: block; margin: 1.25rem 0; padding: .5rem; border: 1px solid #edf0eb; border-radius: 8px; background: white; cursor: zoom-in; }
@@ -189,12 +190,12 @@ body { padding-bottom: 0; font-family: var(--font-body); letter-spacing: 0; }
 .blog-article__content hr { width: 100%; margin: 2rem 0; border: 0; border-top: 1px solid var(--line); }
 .blog-article__content a { color: var(--accent-dark); text-decoration: underline; text-decoration-color: #bdcbbd; text-underline-offset: 3px; }
 .blog-article__content a:hover { color: var(--accent); text-decoration-color: var(--accent); }
-.blog-article__content details.framework-detail { margin: .7rem 0; border: 1px solid var(--line); border-radius: 7px; background: #fbfcf9; scroll-margin-top: 1.5rem; }
-.blog-article__content details.framework-detail > summary { padding: .72rem .9rem; color: var(--ink); font-weight: 650; cursor: pointer; }
-.blog-article__content details.framework-detail[open] > summary { border-bottom: 1px solid var(--line); background: #f4f6f0; }
-.blog-article__content details.framework-detail > :not(summary) { margin-right: 1rem; margin-left: 1rem; }
-.blog-article__content details.framework-detail > p:first-of-type { margin-top: .85rem; }
-.blog-article__content details.framework-detail > :last-child { margin-bottom: .85rem; }
+.blog-article__content details:is(.framework-detail, .protocol-detail) { margin: .7rem 0; border: 1px solid var(--line); border-radius: 7px; background: #fbfcf9; scroll-margin-top: 1.5rem; }
+.blog-article__content details:is(.framework-detail, .protocol-detail) > summary { padding: .72rem .9rem; color: var(--ink); font-weight: 650; cursor: pointer; }
+.blog-article__content details:is(.framework-detail, .protocol-detail)[open] > summary { border-bottom: 1px solid var(--line); background: #f4f6f0; }
+.blog-article__content details:is(.framework-detail, .protocol-detail) > :not(summary) { margin-right: 1rem; margin-left: 1rem; }
+.blog-article__content details:is(.framework-detail, .protocol-detail) > p:first-of-type { margin-top: .85rem; }
+.blog-article__content details:is(.framework-detail, .protocol-detail) > :last-child { margin-bottom: .85rem; }
 .blog-toc { margin: .5rem 0 1.35rem; border: 1px solid var(--line); border-radius: 7px; background: #f8f9f6; font-size: .82rem; }
 .blog-toc > summary { padding: .55rem .8rem; color: var(--ink); font-weight: 650; cursor: pointer; }
 .blog-toc[open] > summary { border-bottom: 1px solid var(--line); }
