@@ -15,19 +15,19 @@ author_profile: false
 
 # 异步 RL 框架的 Staleness，究竟怎么控制（三）？
 
-在系列博客的第一篇中，我们沿着一条 trajectory 的生命周期，详细探讨了不同异步 RL 框架的三层 staleness 控制：生成前的 L1 准入，生成过程中的 L2 控制，以及训练前的 L3 处理。文章最后留下了一个问题：
+在该系列博客的第一篇中，我们沿着一条 trajectory 的生命周期，详细探讨了不同异步 RL 框架的三层 staleness 控制：生成前的 L1 准入，生成过程中的 L2 处理，以及训练前的 L3 剔除。文章最后留下了一个问题：
 
 **我们能否设计一套更灵活的控制机制，既不丢弃数据，又能保证最大 staleness？**
 
 让我们先回想一下目前保证最大 staleness 的常见做法：L3 丢弃。数据进入训练前，我们检查它的版本，发现太旧就不用了。这样的做法尽管守住了上限，但被丢弃数据的生成、后处理和 reward 计算早已完成，这些计算就白白浪费了。
 
-而 NeMo-RL 的 `in_order` 则提供了另一个思路：既然不想等到最后才发现数据太旧，那就在数据准入时，提前安排好它要参加哪一轮训练。正常按序执行时，数据按约定的轮次取用，不必等到完成后再因为版本太旧而被淘汰。但这个办法也有不够灵活的地方。假如当前 batch 就差一条长尾，后面 batch 的几条数据却早已完成，由于目标轮次已经绑定，我们仍然不能拿后面的结果补上当前这个空缺。
+而 NeMo-RL 的 `in_order` 则提供了另一个思路：既然不想等到最后才发现数据太旧，那就在数据准入时，提前安排好它要参加哪一轮训练。正常按序执行时，数据按约定的轮次取用，不必等到完成后再因为版本太旧而被淘汰。但这个办法也有不够灵活的地方：假如当前 batch 就差一条长尾，后面 batch 的几条数据却早已完成，由于目标轮次已经绑定，我们不能拿后面的结果立刻补上当前这个空缺。因此，训练不得不停等，造成性能受损。
 
 那么，这个问题是不是可以进一步得到解决呢？
 
 顺着这个思路想，提前安排训练位置确实可以不用丢弃数据就把 staleness 直接控制住，但我们一定要在一开始就把最终训练 batch 定死吗？我们能不能先为 trajectory 留好一个位置，等它真正完成时，再根据当时的情况调整？这样，快的 trajectory 就有机会早点参与训练，慢的 trajectory 也不至于因为一直被往后推而超限。
 
-为此，我们提出了一套 *Reserve*–*Occupy* 协议，其核心想法是把**生成侧的准入**和**训练侧的 batch 组装**放在一起考虑，让两者在同一个协议下配合起来：准入前就考虑数据之后能在哪里训练，结果完成后的 batch 排布又反过来影响后续准入。这样，我们既能在不丢弃数据的情况下严格控制住最大 staleness，又能避免过早固定训练 batch，让调度更灵活。
+为此，我们提出了一套 *Reserve*–*Occupy* 协议，其核心想法是把**生成侧的准入**和**训练侧的 batch 组装**放在一起考虑，让两者在同一个协议下配合起来：准入前就考虑数据之后能在哪里训练，结果完成后再进行 batch 排布上的优化，并反过来影响后续准入。这样，我们既能在不丢弃数据的情况下严格控制住最大 staleness，又能避免过早固定训练 batch 而让灵活性和性能受限。
 
 下面，我们将抽丝剥茧，一步步讲解我们这套 staleness 控制协议。
 
@@ -41,13 +41,13 @@ author_profile: false
 
 接下来再看训练侧。训练端每次取一个 batch 更新模型，我们就在 rollout 输出和训练端之间引入一层 **staleness buffer**，用它来安排每条数据进入哪一轮训练。这一层与别的框架中 L3 前的 queue/buffer 的设计类似，但不同的是，我们的 staleness buffer 会提前规划好训练版本：**我们会预设一些 staleness buffer，每个 staleness buffer 对应一个训练 batch，大小就是 batch size。** 比如 batch size 为 $$4$$，每个 buffer 就有 $$4$$ 个槽位，每个槽位容纳一条 trajectory。等 $$4$$ 条数据都准备好了，这一批才可以交给训练端去训练。
 
-因此，我们为每个 buffer 分配一个版本号 **$$v_{\text{buffer}}$$**，表示这一批数据将用于哪个模型版本的训练，例如：
+在这套设计下，每个 buffer 会被分配一个独一无二的版本号 **$$v_{\text{buffer}}$$**，表示这一批数据将用于哪个模型版本的训练，例如：
 
 - **Buffer $$v_0$$** 用于模型从 $$v_0$$ 更新到 $$v_1$$ 的训练。
 - **Buffer $$v_1$$** 用于模型从 $$v_1$$ 更新到 $$v_2$$ 的训练。
 - **Buffer $$v_2$$** 用于模型从 $$v_2$$ 更新到 $$v_3$$ 的训练。
 
-注意，Buffer $$v_1$$ 里存放的数据不一定由这一版模型生成：它只说明这些数据将一起参加 $$v_1\rightarrow v_2$$ 这轮更新。如果把一条 $$v_0$$ 生成的数据（即 $$v_{\text{traj}}=0$$）放进 Buffer $$v_1$$，它参加训练时的 staleness 就是 $$1-0=1$$。放进 Buffer $$v_2$$，staleness 就成了 $$2-0=2$$。
+注意，Buffer $$v_1$$ 里存放的数据不一定由版本 $$v_1$$ 生成：它只说明这些数据将一起参加 $$v_1\rightarrow v_2$$ 这轮更新。如果把一条 $$v_0$$ 生成的数据（即 $$v_{\text{traj}}=0$$）放进 Buffer $$v_1$$，它参加训练时的 staleness 就是 $$1-0=1$$。放进 Buffer $$v_2$$，staleness 就成了 $$2-0=2$$。
 
 这样，**staleness 控制就被转化成了一个放置问题**。设最大允许 staleness 为 $$\eta$$，要控制住 staleness，我们只要让每条 trajectory 最终落入的 buffer 满足：
 
@@ -61,17 +61,15 @@ $$
 
 ![把 staleness 控制转化为放置问题：每条数据的最终 buffer 必须满足版本上限]({{ '/assets/blog/psrl-staleness/staleness-buffer-concept.svg' | relative_url }})
 
-图里的 $$X$$ 来自 $$v_0$$，放进 Buffer $$v_1$$ 时满足 $$1\leq 0+1$$。如果继续往后放进 Buffer $$v_2$$，就会违反 staleness 上限。
+图里的数据 X 来自 $$v_0$$，放进 Buffer $$v_1$$ 时满足 $$1\leq 0+1$$。如果继续往后放进 Buffer $$v_2$$，就会违反 staleness 上限。
 
 值得一提的是，这里的 buffer 只记录 trajectory 的元数据（包括 trajectory ID、版本等）。可以把不同 buffer 看成 trajectory 与训练之间的一张排布表，因此调整 trajectory 的位置不需要复制或移动实际的 trajectory 数据。
-
-这一步的意义在于，版本边界可以在生成开始前就被检查。准入阶段只要找得到一个合法的 *Empty* 槽位，就能把这条 trajectory 纳入后续安排。之后即使它成为长尾，也不会因为完成得晚而突然失去唯一的合法去向。真正完成时，协议只是在这张排布表上重新选择槽位，数据本身仍沿着原来的 rollout 路径返回。
 
 ### 2. 有了放置规则，还需要哪几个操作？
 
 那么，具体该怎么去放置呢？最直接的想法，就是等一条数据完成了再给它找合法的位置。但问题也在这里：假设有一条长尾的 trajectory，等它慢慢生成完，前面允许它放置的 buffer 可能已经满了，甚至可能都已经被拿去训练了。这时再找位置，就只能放在一个靠后的 buffer 中，不满足 $$v_{\text{buffer}} \leq v_{\text{traj}}+\eta$$ 的约束，从而超出 staleness 上限。
 
-所以，我们需要把安排放置的时机拆成两个部分。**开始生成前，我们需要先预留一个合法位置，确保生成完成后仍有合法位置，不会超限。真正生成完成时，再决定最终放在哪里（最差也可以放在之前预留的位置上）。** 我们把前一步叫 *Reserve*，后一步叫 *Occupy*。
+所以，安排放置的时机不能拖到最后，我们必须“未雨绸缪”：**在开始生成前，我们就需要提前预留一个合法位置，确保生成完成后仍有地方放而不会让 staleness 超限。真正生成完成时，再决定最终放在哪里（最差也可以放在之前预留的位置上）。** 在这种“两步走”的放置设计中，我们把前一步称作 *Reserve*，后一步称作 *Occupy*。
 
 这也意味着，buffer 里会同时出现尚未完成和已经完成的 trajectory。为了区分它们，我们让每个槽位有 $$3$$ 种状态：
 
@@ -79,13 +77,11 @@ $$
 - *Reserved*：已经为一条 trajectory 预留位置，但结果还没完成。
 - *Occupied*：trajectory 已经完成，实际放进了这个槽位。
 
-有了这 $$3$$ 种状态，L1 准入检查就很好理解了：**看看现在还能不能为这条 trajectory 做一次 *Reserve*。** 我们扫描尚未取用、满足 $$v_{\text{buffer}}\leq v_{\text{traj}}+\eta$$ 的 buffer，检查其中是否还有 *Empty* 槽位。有的话，先把一个空槽变成这条 trajectory 的 *Reserved*，再开始生成。没有的话，就无法保证新准入的 trajectory 生成完毕后还有合法位置，因此必须暂缓准入。
+有了这 $$3$$ 种状态，L1 准入检查就很好理解了：**看看现在还能不能为这条 trajectory 做一次 *Reserve*。** 我们扫描尚未取用、满足 $$v_{\text{buffer}}\leq v_{\text{traj}}+\eta$$ 的 buffer，检查其中是否还有 *Empty* 槽位。有的话，就先把这个空槽变成这条 trajectory 的 *Reserved*，再开始生成。没有的话，就无法保证新准入的 trajectory 生成完毕后还有合法位置放置，因此必须暂缓准入。
 
 ![L1 准入：四条 trajectory 依次 Reserve，准入时获得版本并开始生成，两个合法 buffer 满后 E 暂缓准入]({{ '/assets/blog/psrl-staleness/reserve-admission.gif?v=20261031-admission-v3' | relative_url }})
 
 *Reserved* 虽然还没有实际数据，但也不能再算成空槽，因为它已经为一条在途 trajectory 留好了位置。多个 trajectory 同时准入时，也必须以成功预留为准，不能因为各自都看到过空位，就一起开始生成。这样，每条成功准入的 trajectory 才确实有一个合法位置可去。
-
-这样，我们就把生成侧和训练侧联系了起来。如果只看生成侧的数量，我们无法知道每条数据最晚要赶上哪一批训练。如果只看已经完成的数据，我们又无法知道后面还有多少旧数据正在生成。但通过生成前的 *Reserve* 提前规划，再通过生成后的 *Occupy* 实际安排训练批次，我们就可以将二者联系在一起了。
 
 ### 3. 按最差情况 *Reserve*，按最好情况 *Occupy*
 
@@ -93,17 +89,15 @@ $$
 
 开始生成时，我们还不知道谁会先完成。既然如此，不妨先按最差情况来安排，**优先在合法范围内较晚的 buffer 中 *Reserve*，并优先使用其中靠后的空槽。** 即使这条 trajectory 很慢，它也已经有了一个不超过上限的最差位置。同时，前面的空槽可以尽量留给较早完成的数据，帮助更早的 batch 攒齐。
 
-这里的“较晚”是一个优先级，不是要求一定放到 $$v_{\text{traj}}+\eta$$。例如 $$v_{\text{traj}}=0$$、$$\eta=1$$，我们优先预留 Buffer $$v_1$$。如果它已经满了，Buffer $$v_0$$ 还有空槽，就仍然可以在那里预留，不必直接拒绝准入。
+等 trajectory 完成，最稳妥的做法当然是**就在自己之前预留的位置原地 *Occupy***。因为这个位置此前已经通过检查，直接把 *Reserved* 变成 *Occupied* 就可以保证不超限。不过如果始终这样做，生成前安排在哪个 batch，最终就留在哪个 batch，整体效果也就退回到了类似 NeMo-RL `in_order` 的固定批次安排上了。
 
-等 trajectory 完成，最稳妥的做法当然是**就在自己当前的预留位置 *Occupy***。这个位置此前已经通过检查，直接把 *Reserved* 变成 *Occupied* 就可以保证不超限。不过如果始终这样做，生成前安排在哪个 batch，最终就留在哪个 batch，调度思路也就退回到类似 NeMo-RL `in_order` 的固定批次安排。
-
-来看一个小例子。A–F 都由 $$v_0$$ 生成，$$\eta=1$$，每个 buffer 有 $$4$$ 个槽位。假设 B 最先完成，它原本预留在 Buffer $$v_1$$ 的第 $$3$$ 个槽位。按原地 *Occupy* 的做法，我们只需把这个槽位从 *Reserved* 变为 *Occupied*，其他位置完全不用动。
+来看一个小例子。每个 buffer 有 $$4$$ 个槽位，A–F 都由 $$v_0$$ 生成，$$\eta=1$$，初始从后到前依次 *Reserve*。假设 B 最先完成，它原本预留在 Buffer $$v_1$$ 的第 $$3$$ 个槽位。按原地 *Occupy* 的做法，我们只需把这个槽位从 *Reserved* 变为 *Occupied* 就可以了，其他位置完全不用动。
 
 ![原地 Occupy：直接使用预留位置]({{ '/assets/blog/psrl-staleness/occupy-in-place.gif' | relative_url }})
 
-这样当然合法，但也有些可惜：B 明明已经完成，前面的 Buffer $$v_0$$ 也有空槽，它却只能留在后面的 Buffer $$v_1$$，等到下一轮才参与训练。
+这样的做法当然满足 staleness 约束，但也有些可惜：B 明明已经完成，前面的 Buffer $$v_0$$ 也有空槽，它却只能留在后面的 Buffer $$v_1$$，等到下一轮才参与训练。
 
-那么，真的必须 *Occupy* 在原先 *Reserve* 的位置吗？其实不必。*Reserve* 只提供“最差也有合法位置”的保证，而不是替 *Occupy* 固定最终放置位置。事实上，只要最终的放置位置依然满足
+故而，真的必须 *Occupy* 在原先 *Reserve* 的位置吗？其实不必。*Reserve* 只提供“最差也有合法位置”的保证，而不是替 *Occupy* 决定最终的放置位置。事实上，只要最终的放置位置依然满足
 
 $$
 \begin{equation*}
@@ -113,19 +107,19 @@ $$
 
 就可以把已经完成的数据放得更早。
 
-具体来说，我们可以**释放原先的预留槽位，整理可移动的 *Reserved*，再寻找当前最早的合法 *Empty* 槽位，将结果放进去。** 这里的“最早”先按 buffer 版本比较，再按同一个 buffer 内的槽位顺序比较。
+具体来说，我们可以**释放原先的预留槽位，整理可移动的 *Reserved*，再寻找当前最早的合法 *Empty* 槽位，将结果放进去。**
 
 这里为什么还要整理其他 *Reserved*？因为刚释放的空位可能在后面的 buffer，而前面还留着一些正在生成的 trajectory 的预留。既然这些数据还没完成，只要版本允许，就可以把它们的预留后移，用上刚腾出来的空位，继续把靠前的空间留给已完成的数据。
 
 回到刚才那个例子：B 预留在 Buffer $$v_1$$ 的第 $$3$$ 个槽位并率先完成。这一次，我们这样处理：
 
-1. 删除 B 的 *Reserved*，把已经完成的 B 暂放到图中右上角的待放置区。
+1. 删除 B 的 *Reserved*，把已经完成的 B 暂存。
 2. 从前往后扫描 *Reserved*，找到第一个能合法移入这个空位的 F。把 F 的预留移到 B 刚刚释放的 Buffer $$v_1$$ 第 $$3$$ 个槽位。
-3. 为 B 寻找最早的合法 *Empty* 槽位。Buffer $$v_0$$ 第 $$1$$ 个槽位原本就是空的，因此 B 直接落在那里。
+3. 为 B 寻找最早的合法 *Empty* 槽位。Buffer $$v_0$$ 第 $$1$$ 个槽位就是最早的空槽位，因此 B 直接落在那里。
 
 ![按最早位置 Occupy：其余预留位置填充空位]({{ '/assets/blog/psrl-staleness/reserved-repacking.gif' | relative_url }})
 
-和前一张图相比，B 从后面的 batch 提前到了前面的 batch，F 则接过了 B 原先的预留位置。这样调整是安全的，因为 B 和 F 各自都有一个满足版本上限的位置：B 已经完成，可以直接填进更早的 batch，而 F 虽然还在生成，但后移之后依然保有合法预留，并没有因为给 B 让出空间而失去位置。
+和前一张图相比，B 从后面的 batch 提前到了前面的 batch，F 则接替了 B 原先的预留位置。这样调整是安全的，因为 F 和 B 各自的预留和占用均满足 staleness 约束：B 已经完成，可以直接填进更早的 batch，而 F 虽然还在生成，但后移之后依然保有合法预留，并没有因为给 B 让出空间而失去位置。
 
 **这样调整的目的，是让已经完成的数据尽早参与训练，同时让尚未完成的 trajectory 的预留尽量靠后。** 本例中，Buffer $$v_0$$ 第 $$1$$ 个槽位是空的，B 可以直接占用，帮助训练侧攒齐 batch。而后移 F 的作用，是把它占着的第 $$3$$ 个槽位也腾出来，给后续完成的数据留下更多靠前的空间。
 
@@ -139,9 +133,7 @@ $$
 
 本例中就是 $$1\leq0+1$$，所以 F 可以移动。扫描时，我们选择前面符合条件的最早 *Reserved* 即可。
 
-这就是“按最差情况 *Reserve*，按最好情况 *Occupy*”：**生成前先留好合法位置，完成后再根据当前排布尽量往前放。** 这里的“最好”是当前状态下尽早放置，不是预知所有完成时间后的全局最优。如果没有更早的空槽，最差也可以使用本次操作前仍有效的预留位置。这样，我们既保住了每条 trajectory 的 staleness 上限，又为前面的 batch 提前攒齐创造了条件。
-
-这里的两个动作也各自承担不同责任。*Reserve* 面向还没有结果的 trajectory，优先保证“以后至少有一个合法位置”。*Occupy* 面向已经完成的 trajectory，利用当时已经释放出来的空槽，尽量让更早的 batch 先凑齐。两者共享同一个版本不等式，因此完成顺序可以变化，安全边界却不会变化。
+这就是“按最差情况 *Reserve*，按最好情况 *Occupy*”：**生成前先留好合法位置，完成后再根据当前排布尽量往前放。** 如果没有更早的空槽，最差也可以使用本次操作前仍有效的预留位置。这样，我们既保住了每条 trajectory 的 staleness 上限，又为前面的 batch 提前攒齐创造了条件。
 
 ![Reserve 按最差情况预留，Occupy 按当前情况尽早放置，两者共享同一条上限]({{ '/assets/blog/psrl-staleness/protocol-lifecycle.svg' | relative_url }})
 
@@ -151,19 +143,17 @@ $$
 
 - *PENDING*：还没凑齐已完成的数据，但仍有空槽。
 - *STUCK*：空槽已经用完，其中仍有 *Reserved*，要等未完成的 trajectory。
-- *READY*：整批都是 *Occupied*，数据已经齐了。
+- *READY*：整批都是 *Occupied*，数据已凑齐。
 
 ![PENDING、STUCK、READY：有空槽、满但未齐、整批已齐]({{ '/assets/blog/psrl-staleness/buffer-states-feedback.svg' | relative_url }})
 
 如果当前版本的 buffer 已经 *READY*，而且训练端空闲，就可以**取出 buffer 对应的数据开始训练**。
 
-例如，取出 Buffer $$v_0$$ 的数据后，训练端开始 $$v_0\rightarrow v_1$$ 的更新。只有更新完成并发布 $$v_1$$，新的 trajectory 才能使用这版权重生成。在 $$\eta=1$$ 时，它们可以预留的位置也随之变为 Buffer $$v_1$$、Buffer $$v_2$$。
+例如，取出 Buffer $$v_0$$ 的数据后，训练端开始 $$v_0\rightarrow v_1$$ 的模型更新。只有更新完成并发布 $$v_1$$ 后，新的 trajectory 才能使用这版模型继续生成。在 $$\eta=1$$ 时，这些新 trajectory 可以预留的位置就也随之扩展到了 Buffer $$v_2$$。
 
 反过来，后面的 buffer 提前 *READY*，也不能抢先训练。Buffer $$v_2$$ 必须等 $$v_1\rightarrow v_2$$ 的更新完成，轮到自己时再使用。
 
-最终的效果就是：**batch 攒齐决定训练何时能开始，训练完成产生的新版本则让后续 trajectory 获得更靠后的合法位置去 *Reserve*。** 它们相互衔接，使得生成和训练在此期间持续重叠运行。
-
-从训练端看，*READY* 只说明某个 batch 的槽位已经填满，并不意味着它可以跳过前面的训练轮次。训练端仍按 buffer 版本顺序取用数据，生成端则在训练进行期间继续推进。只有当一轮更新完成并发布新版本，新的 trajectory 才能获得更靠后的合法范围。也正因为这个反馈存在，准入数量不能只看 rollout 端当前有多少空闲并发名额。
+最终的效果就是：**buffer 攒齐决定训练何时能开始，训练完成产生的新版本则让后续 trajectory 获得更靠后的合法 buffer 槽位去 *Reserve*。** 它们相互衔接，使得生成和训练在此期间持续重叠运行。
 
 ## Part II：演示示例
 
@@ -182,12 +172,10 @@ $$
 
 ### 6. 关键步骤
 
-这段演示最终得到 $$3$$ 个训练批次：Buffer $$v_0$$ 的 `[A,D,C,E]`、Buffer $$v_1$$ 的 `[F,G,H,B]`、Buffer $$v_2$$ 的 `[J,K,L,I]`，并依次进行了训练。
-
-下面我们选取演示动画中几个关键的节点展开分析（如果你已经通过动画理解了这套协议，可以直接跳过这一部分）。
+下面我们选取演示动画中几个关键的节点展开分析（如果你已经通过动画充分理解了这套协议，可以直接跳过这一小节）。
 
 <details markdown="1" class="protocol-detail" id="step-1">
-<summary>6.1. 一开始，同时准入 A–F</summary>
+<summary>一开始，同时准入 A–F</summary>
 
 初始权重为 $$v_0$$，$$\eta=1$$，batch size 为 $$4$$，max concurrency 为 $$6$$。合法范围内共有 $$8$$ 个槽位，先准入 A–F，并在准入时为它们写入 $$v_{\text{traj}}=0$$。G–L 此时还没有版本，也还没有开始生成。
 
@@ -198,7 +186,7 @@ $$
 </details>
 
 <details markdown="1" class="protocol-detail" id="step-2">
-<summary>6.2. A 完成并 <em>Occupy</em>，马上准入 G</summary>
+<summary>A 完成并 <em>Occupy</em>，马上准入 G</summary>
 
 A 完成后先离开原来的 *Reserved*，F 补到释放的槽位，A 再放入当前最早的合法 *Empty*。A 变成 *Occupied* 后立即释放一个 rollout 并发名额，Buffer $$v_0$$ 仍有合法空槽，所以同一时刻准入 G，并发恢复到 $$6$$。
 
@@ -207,7 +195,7 @@ A 完成后先离开原来的 *Reserved*，F 补到释放的槽位，A 再放入
 </details>
 
 <details markdown="1" class="protocol-detail" id="step-3">
-<summary>6.3. D 完成后再补 H，随后停止准入</summary>
+<summary>D 完成后再补 H，随后停止准入</summary>
 
 D 完成后，G 的 *Reserved* 后移到释放的位置，D *Occupy* 到 Buffer $$v_0$$，H 随即准入。之后 C 完成，但合法范围内的 Buffer $$v_0$$ 和 Buffer $$v_1$$ 已占满 $$8$$ 个槽位，所以即使并发降到 $$5$$，I 也不能开始。Buffer $$v_2$$ 对当前 $$v_0$$ 版本仍然太晚。
 
@@ -216,7 +204,7 @@ D 完成后，G 的 *Reserved* 后移到释放的位置，D *Occupy* 到 Buffer 
 </details>
 
 <details markdown="1" class="protocol-detail" id="step-4">
-<summary>6.4. 第 1 批攒满，训练和生成并行</summary>
+<summary>第 1 批攒满，训练和生成并行</summary>
 
 A、D、C、E 变成 *Occupied* 后，Buffer $$v_0$$ 变成 *READY*，训练端取走这 $$4$$ 条并开始 $$v_0\rightarrow v_1$$ 的更新。训练进行时，B、F、G、H 仍在生成，F、G 可以继续 *Occupy* 到 Buffer $$v_1$$。
 
@@ -227,7 +215,7 @@ A、D、C、E 变成 *Occupied* 后，Buffer $$v_0$$ 变成 *READY*，训练端�
 </details>
 
 <details markdown="1" class="protocol-detail" id="step-5">
-<summary>6.5. 第 1 轮训练完成，补入 I–L</summary>
+<summary>第 1 轮训练完成，补入 I–L</summary>
 
 $$v_0\rightarrow v_1$$ 完成后，新的 trajectory 可以使用 $$v_1$$，合法范围扩展到 Buffer $$v_2$$。H、B 仍在生成，刚好空出 $$4$$ 个并发名额，于是 I–L 同时准入，并获得 $$v_{\text{traj}}=1$$。
 
@@ -236,7 +224,7 @@ $$v_0\rightarrow v_1$$ 完成后，新的 trajectory 可以使用 $$v_1$$，合�
 </details>
 
 <details markdown="1" class="protocol-detail" id="step-6">
-<summary>6.6. 旧 trajectory 不能后移，J 从下一批首个槽位开始</summary>
+<summary>旧 trajectory 不能后移，J 从下一批首个槽位开始</summary>
 
 J 完成时，Buffer $$v_1$$ 已没有空槽，H、B 的 *Reserved* 也不能后移到 $$v_2$$，因为版本差会变成 $$2$$。所以 J 只能在 Buffer $$v_2$$ 内整理，并 *Occupy* 当前最早的合法空槽，I 的预留顺势后移。
 
@@ -245,7 +233,7 @@ J 完成时，Buffer $$v_1$$ 已没有空槽，H、B 的 *Reserved* 也不能后
 </details>
 
 <details markdown="1" class="protocol-detail" id="step-7">
-<summary>6.7. B 和 I 两条长尾，先后补齐两个 batch</summary>
+<summary>B 和 I 两条长尾，先后补齐两个 batch</summary>
 
 H 完成后，Buffer $$v_1$$ 只差 B，Buffer $$v_2$$ 仍在等待 I。K 先完成并写入 $$v_2$$，B 在 K 之后、L 之前完成。B 的 *Occupy* 让 Buffer $$v_1$$ 变成 *READY*，训练端开始 $$v_1\rightarrow v_2$$，而 L 和 I 继续与训练并行生成。
 
@@ -387,4 +375,4 @@ $$
 
 这样，L1 能看到训练侧还剩哪些合法位置，L3 调整位置时也会保留未完成 trajectory 的去向。完成较快的 trajectory 不必始终受最初 batch 安排的约束，完成较慢的 trajectory 也不会因为一直被延后，最终被安排到不合法的位置参与训练，从而违反 staleness 约束。严格的 staleness 控制与运行时灵活性，正是通过这套由 L1 与 L3 共同维护的、基于 buffer 的 *Reserve*-*Occupy* 协议得到保证的。
 
-目前，这套协议已经完整实现在我们的 RL 框架 [**PSRL**](https://github.com/psrl-project/psrl) 中。欢迎试用我们的框架，也欢迎在 issue 中提出与博客或框架相关的问题和建议。如果这篇博客对你有帮助，希望你能顺手给 PSRL 点个 star⭐，你的支持也是我们持续完善框架、分享技术博客的动力！
+目前，这套协议已经在我们的 RL 框架 [**PSRL**](https://github.com/psrl-project/psrl) 中完整实现。欢迎试用我们的框架，也欢迎在 issue 中提出与博客或框架相关的问题和建议。如果这篇博客对你有帮助，希望你能顺手给 PSRL 点个 star⭐，你的支持也是我们持续完善框架、分享技术博客的动力！

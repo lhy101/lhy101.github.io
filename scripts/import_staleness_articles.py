@@ -41,6 +41,7 @@ def adapt_article(original, slug):
     article = re.sub(r'\]\(' + re.escape(prefix) + r'([^)]+)\)',
                      lambda match: '](' + asset_url(slug, match[1]) + ')', original)
     article = re.sub(r'<details(?![^>]*\bmarkdown=)([^>]*)>', r'<details markdown="1"\1>', article)
+    article = re.sub(r'(<summary>\s*)\d+\.\d+\.?\s+', r'\1', article)
     article = re.sub(r'(?m)^\$\$([^\n]+)\$\$[ \t]*$', r'$$\n\1\n$$', article)
 
     def display(match):

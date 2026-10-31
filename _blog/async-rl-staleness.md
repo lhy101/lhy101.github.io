@@ -103,7 +103,7 @@ prompt 还没开始生成时，系统要先决定是否准入。通过准入控�
 下面，你可以点击具体框架的名称，展开查看详细分析。
 
 <details markdown="1" class="framework-detail" id="framework-verl">
-<summary>4.1 verl</summary>
+<summary>verl</summary>
 
 我们先看 verl（关注其异步训练模式，对应配置是 `trainer.v1.trainer_mode=separate_async`）。它允许通过 `max_off_policy_threshold` 设置阈值，再用 `max_off_policy_strategy` 选择超限时怎么处理：丢弃（`drop`），或者等待（`wait`）。
 
@@ -140,7 +140,7 @@ if global_steps - prompt_global_steps.get(uid, global_steps) + 1 > self.max_off_
 </details>
 
 <details markdown="1" class="framework-detail" id="framework-trl">
-<summary>4.2 TRL</summary>
+<summary>TRL</summary>
 
 下面来看 TRL，我们聚焦于其提供的异步 GRPO 训练方案（Async GRPO recipe），它允许通过 `max_staleness` 参数来控制 staleness 上限。
 
@@ -168,7 +168,7 @@ if staleness > self.max_staleness:
 </details>
 
 <details markdown="1" class="framework-detail" id="framework-areal">
-<summary>4.3 AReaL</summary>
+<summary>AReaL</summary>
 
 **L1：** AReaL 有专门的 `StalenessManager` 模块来控制准入，允许通过 `max_head_offpolicyness` 配置生成提前量。类似于 verl，它让准入额度随训练进度推进，核心公式如下：
 
@@ -193,7 +193,7 @@ staleness_capacity = (ofp + current_version + 1) * consumer_bs - sample_cnt
 </details>
 
 <details markdown="1" class="framework-detail" id="framework-skyrl">
-<summary>4.4 SkyRL</summary>
+<summary>SkyRL</summary>
 
 **L1：** SkyRL 沿用了 AReaL 的额度思路，源码也注明了这一点。类似地，其提供了参数 `max_staleness_steps`，来决定初始能提前生成多少，之后跟着训练进度补充额度，再扣除累计完成和仍在生成的 prompt 数。额度用完就暂停准入，训练每完成一轮，再增加一个 batch 的额度。
 
@@ -214,7 +214,7 @@ staleness_capacity = (ofp + current_version + 1) * consumer_bs - sample_cnt
 </details>
 
 <details markdown="1" class="framework-detail" id="framework-openrlhf">
-<summary>4.5 OpenRLHF</summary>
+<summary>OpenRLHF</summary>
 
 **L1：** OpenRLHF 同样限制生成侧的工作量，不过准入额度的用法与 AReaL 不同。可以把它理解成以 batch 为粒度的固定数量的生成许可：生成侧每准备一批结果，就先取走一个许可，用完便等待。结果放进 queue 后，要等训练侧[取出这一批结果，才会归还许可](https://github.com/OpenRLHF/OpenRLHF/blob/dc2a7ad326f619fc5a47737ea47d1920ce2c0b53/openrlhf/trainer/ppo_trainer_async.py#L227-L232)。许可数量由 `async_queue_size` 决定。
 
@@ -229,7 +229,7 @@ staleness_capacity = (ofp + current_version + 1) * consumer_bs - sample_cnt
 </details>
 
 <details markdown="1" class="framework-detail" id="framework-slime">
-<summary>4.6 slime</summary>
+<summary>slime</summary>
 
 类似上述框架，slime 也主要在 L1 通过限制工作量控制准入（这里关注 slime 的完全异步模式）。
 
@@ -248,7 +248,7 @@ staleness_capacity = (ofp + current_version + 1) * consumer_bs - sample_cnt
 </details>
 
 <details markdown="1" class="framework-detail" id="framework-roll">
-<summary>4.7 ROLL</summary>
+<summary>ROLL</summary>
 
 ROLL 提供了一个核心的 `async_generation_ratio` 参数来表示 staleness 上限。下面用 `async_generation_ratio=2`、每批 $$32$$ 个 prompt 作为例子，把 L1–L3 串联起来看。
 
@@ -263,7 +263,7 @@ ROLL 提供了一个核心的 `async_generation_ratio` 参数来表示 staleness
 </details>
 
 <details markdown="1" class="framework-detail" id="framework-prime-rl">
-<summary>4.8 prime-rl</summary>
+<summary>prime-rl</summary>
 
 **L1：** prime-rl 先用 `max_inflight` 限制同时运行的生成数量。负责生成调度的模块会检查还有多少空位，有空位才继续准入，生成完成后再释放。这个数量限制与前面几个框架的思路相近。
 
@@ -289,7 +289,7 @@ def min_fresh_version(step: int, max_off_policy_steps: int) -> int:
 </details>
 
 <details markdown="1" class="framework-detail" id="framework-dressage">
-<summary>4.9 Dressage</summary>
+<summary>Dressage</summary>
 
 **L1：** 与上述框架一样，Dressage 也通过限制工作量控制准入：正在生成的 group 不能超过 `max_active_groups`，在 `output_queue` 中等待训练取样的结果也不能积压太多。这里的 `output_queue` 就是 rollout 完成后、组装训练 batch 前存放 group 的队列，对应流水线图中的 L3 等待区域。它达到容量的 $$80\%$$ 时，就[暂停新 prompt 的准入](https://github.com/Accio-Lab/Dressage/blob/3e3142fe8ea07e4504c3b20a936a4c201a3de44c/dressage/rollout/fully_async_rollout.py#L363-L378)。已经开始的生成仍会继续，队列完全装满时，完成结果需要等空位才能写入。
 
@@ -315,7 +315,7 @@ if version_switches <= max_partial_rollout_preempts:
 </details>
 
 <details markdown="1" class="framework-detail" id="framework-nemo-rl">
-<summary>4.10 NeMo-RL</summary>
+<summary>NeMo-RL</summary>
 
 NeMo-RL 用一个统一控制器协调生成和训练，并提供四种 sampler 来决定准入方式和训练取样策略。表中先给出它们在三层上的区别。
 

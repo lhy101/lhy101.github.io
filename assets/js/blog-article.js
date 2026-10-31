@@ -21,7 +21,7 @@
     readingInfo.hidden = false;
   }
 
-  const headings = [...article.querySelectorAll('h2, h3, h4, details:is(.framework-detail, .protocol-detail) > summary')];
+  const headings = [...article.querySelectorAll('h2, h3, h4')];
   const uniqueId = base => {
     let id = base;
     let suffix = 2;
@@ -36,10 +36,8 @@
   root.replaceChildren();
   const outline = [];
   headings.forEach((heading, index) => {
-    const isDisclosure = heading.tagName === 'SUMMARY';
-    const target = isDisclosure ? heading.parentElement : heading;
-    const level = isDisclosure ? 4 : Number(heading.tagName.slice(1));
-    target.id ||= uniqueId(`section-${index + 1}`);
+    const level = Number(heading.tagName.slice(1));
+    heading.id ||= uniqueId(`section-${index + 1}`);
     while (outline.length && outline[outline.length - 1].level >= level) outline.pop();
     const parent = outline[outline.length - 1];
     let list = root;
@@ -52,7 +50,7 @@
     }
     const item = document.createElement('li');
     const link = document.createElement('a');
-    link.href = `#${encodeURIComponent(target.id)}`;
+    link.href = `#${encodeURIComponent(heading.id)}`;
     link.textContent = heading.textContent.trim();
     item.append(link);
     list.append(item);

@@ -29,7 +29,7 @@ series: "可选的系列名称"
 - `title` 与正文的一级标题保持一致。正文使用一个一级标题，二至四级标题会自动生成分层目录。
 - 配图放在 `assets/blog/your-slug/`，仅保留发布需要的文件。`cover_width`、`cover_height` 填图片实际像素大小。
 - 图片示例：`![图片说明]({{ '/assets/blog/your-slug/figure.png' | relative_url }})`。文章配图可点击查看原图。
-- 折叠内容使用 `<details markdown="1"><summary>标题</summary>`，内部 Markdown 前后留空行，以便 Kramdown 正确解析。需要加入目录时，添加 `class="framework-detail"`，其标题会作为四级目录项，点击后自动展开内容。
+- 折叠内容使用 `<details markdown="1"><summary>标题</summary>`，内部 Markdown 前后留空行，以便 Kramdown 正确解析。框架和协议折叠区分别使用 `class="framework-detail"`、`class="protocol-detail"`；网站导入时去掉折叠标题中的小节编号，文章目录只列正文标题，折叠区仍可展开，并保留原有锚点链接。
 - 独立公式使用单独一行的 `$$` 包裹，公式块前后各留一空行，避免被解析成行内公式。不需要编号时，在公式块内使用 `\begin{equation*}` 和 `\end{equation*}`。
 - `lang` 可改为 `en`；`series` 可省略。
 - 每篇文章标题下自动显示“全文约 ×× 字 · 预计阅读 ×× 分钟”，无需手填字数。统计包含折叠正文，中文逐字、英文和数字按词计数，排除代码块、公式和图片内容；中文按每分钟 500 字估算，可在 `_config.yml` 中用 `blog_zh_words_per_minute` 调整，其他语言沿用 `words_per_minute`。此值是阅读提示的经验设置，实际用时取决于读者对内容的熟悉程度，以及阅读图表和推导公式所需的时间。
