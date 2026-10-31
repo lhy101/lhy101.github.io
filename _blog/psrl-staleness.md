@@ -81,6 +81,8 @@ $$
 
 有了这 $$3$$ 种状态，L1 准入检查就很好理解了：**看看现在还能不能为这条 trajectory 做一次 *Reserve*。** 我们扫描尚未取用、满足 $$v_{\text{buffer}}\leq v_{\text{traj}}+\eta$$ 的 buffer，检查其中是否还有 *Empty* 槽位。有的话，先把一个空槽变成这条 trajectory 的 *Reserved*，再开始生成。没有的话，就无法保证新准入的 trajectory 生成完毕后还有合法位置，因此必须暂缓准入。
 
+![L1 准入：四条 trajectory 依次 Reserve 并开始生成，两个合法 buffer 满后暂缓准入]({{ '/assets/blog/psrl-staleness/reserve-admission.gif' | relative_url }})
+
 *Reserved* 虽然还没有实际数据，但也不能再算成空槽，因为它已经为一条在途 trajectory 留好了位置。多个 trajectory 同时准入时，也必须以成功预留为准，不能因为各自都看到过空位，就一起开始生成。这样，每条成功准入的 trajectory 才确实有一个合法位置可去。
 
 这样，我们就把生成侧和训练侧联系了起来。如果只看生成侧的数量，我们无法知道每条数据最晚要赶上哪一批训练。如果只看已经完成的数据，我们又无法知道后面还有多少旧数据正在生成。但通过生成前的 *Reserve* 提前规划，再通过生成后的 *Occupy* 实际安排训练批次，我们就可以将二者联系在一起了。
@@ -173,7 +175,7 @@ $$
 
 下面，我们来看一下完整的端到端演示，一共跑了 $$3$$ 个批次：
 
-<iframe class="protocol-player" src="{{ '/assets/blog/psrl-staleness/animation/index.html?embed=1' | relative_url }}" title="Reserve-Occupy 协议可交互动画" loading="lazy" width="100%" height="800" frameborder="0" allowfullscreen></iframe>
+<iframe class="protocol-player" src="{{ '/assets/blog/psrl-staleness/animation/index.html?embed=1&v=20261031-clock' | relative_url }}" title="Reserve-Occupy 协议可交互动画" loading="lazy" width="100%" height="800" frameborder="0" allowfullscreen></iframe>
 
 
 左侧每行是一条 trajectory，进度条总长度与这条 trajectory 从准入到完成的用时成比例。$$v_{\text{traj}}$$ 为准入时赋予 trajectory 的版本编号。右侧是 $$3$$ 个用于训练的 staleness buffer。演示动画中的移动是为了把因果关系画清楚，协议本身的 *Reserve* 和 *Occupy* 都是瞬间完成的。

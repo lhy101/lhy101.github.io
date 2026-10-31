@@ -114,7 +114,10 @@
   scrub.oninput=()=>{setPlaying(false);seek(Number(scrub.value))};
   window.psrlPlayer={seek,selectStep,setPlaying,simulationTime,rowState,trainingState,get time(){return clock},get drawCount(){return drawCount},get backgroundCount(){return [...images.keys()].filter(name=>name.startsWith('bg-')).length},scene};
   document.getElementById('loading').hidden=true;
-  function tick(now){if(playing){clock+=(now-last)/1000*speed;if(clock>=scene.duration)clock=0}last=now;draw(clock);requestAnimationFrame(tick)}
+  // Embedded webviews can give rAF timestamps relative to the parent document.
+  // Read the same local clock used by play/seek instead of mixing time origins.
+  document.addEventListener('visibilitychange',()=>{last=performance.now()});
+  function tick(){const now=performance.now();if(playing&&!document.hidden){clock+=Math.max(0,now-last)/1000*speed;if(clock>=scene.duration)clock=0}last=now;draw(clock);requestAnimationFrame(tick)}
   requestAnimationFrame(tick);
 })().catch(error=>{document.getElementById('loading').textContent=error.message;throw error;});
 </script><script>if(new URLSearchParams(location.search).get('embed')==='1'){document.body.classList.add('embedded');const main=document.querySelector('main');const resize=()=>parent.postMessage({type:'protocol-player-height',height:Math.ceil(main.getBoundingClientRect().height)+2},'*');new ResizeObserver(resize).observe(main);resize();}</script></body></html>

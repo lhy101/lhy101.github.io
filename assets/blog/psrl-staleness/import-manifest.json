@@ -1,7 +1,7 @@
 {
   "source": "psrl-staleness-blog.zh-CN.md",
-  "source_sha256": "163e829668e752cbad7075337ecb2949c37fa3c7923f82507047f65e17b35894",
-  "figures": 23,
+  "source_sha256": "253924de42b31d707676f84201ac6ee329d1ac1e45ad3ab1142f322353a29e23",
+  "figures": 24,
   "copied_assets": {
     "buffer-states-feedback.svg": "419a7a94567498acc6153925ec8a8ba23136fd8f4c59eb646ab058b192ce20ac",
     "clips/01-initial-admission.gif": "6f62f7e5975fadbcfe517c528b459e06e2927085f7c7296f56424426dbb0164b",
@@ -24,6 +24,7 @@
     "extensions/stuck-timeout-recovery.gif": "f240482a119d12c8eed669aa0b12122d09decc570edfecafb05ef913b37003eb",
     "occupy-in-place.gif": "368a5d72bc51fe32c26d4923594240b77d20f47300435f76e17698a84ab3c801",
     "protocol-lifecycle.svg": "c0c0437d3e54153b4e032927a7d48b3accc73f97c157242ad8a4b0ad109523bf",
+    "reserve-admission.gif": "a21c0f129bc06c0cbaf2d095225be533f63db638903e45870a2eee860bec0e75",
     "reserved-repacking.gif": "99e367a714d0000f3b1694612b41aafcc0a2fbbe92c23f927fbce49529c10dfb",
     "staleness-buffer-concept.svg": "01ebe3da04f2f85d655a67462e28e30b96fd2fc708df51fac4eaed7a3f5f5153",
     "cover.svg": "60fbd48e7a9b55b4ac9ecf982e915f31b32462789819006973bd3e110abe9233",

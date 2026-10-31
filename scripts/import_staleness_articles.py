@@ -50,8 +50,8 @@ def adapt_article(original, slug):
 
     article = re.sub(r'\n*\n\$\$\n([\s\S]*?)\n\$\$\n*', display, article)
     if slug == 'psrl-staleness':
-        article = article.replace('src="publishing/psrl-staleness/animation-preview.html?embed=1"',
-                                  'src="' + asset_url(slug, 'animation/index.html?embed=1') + '"')
+        article = re.sub(r'src="publishing/psrl-staleness/animation-preview\.html(\?[^"]*)?"',
+                         lambda match: 'src="' + asset_url(slug, 'animation/index.html' + (match[1] or '')) + '"', article)
     return article.rstrip() + '\n'
 
 

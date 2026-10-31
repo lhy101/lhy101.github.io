@@ -87,6 +87,8 @@ python scripts/import-staleness-blog.py 'C:\Users\lihaoyang\Desktop\workspace\bl
 
 导入后可运行 `python scripts/check-staleness-imports.py 'C:\Users\lihaoyang\Desktop\workspace\blog'`，核对正文、公式、资源哈希和动画路径。
 
+播放器回归检查使用 `node scripts/check-psrl-playback.cjs`（需要 Playwright 与 Chrome，可通过 `CODEX_NODE_MODULES`、`PSRL_BROWSER_PATH` 指定）。它验证从头持续播放、画面推进、暂停、继续、拖动和重新播放，并模拟嵌入浏览器的动画回调时间起点偏移。播放器统一使用自身的 `performance.now()` 计时，避免 iframe 内出现负数进度。可用 `PSRL_PLAYER_URL` 指定线上播放器地址。
+
 ## 本地构建
 
 有 Ruby / Bundler 环境时，使用站点现有的 GitHub Pages 依赖：

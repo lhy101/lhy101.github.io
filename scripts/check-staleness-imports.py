@@ -34,7 +34,7 @@ def main():
         assert formulas(original) == formulas(body), slug+' formula parity'
         assert len(re.findall('<details', original)) == len(re.findall('<details markdown="1"', body))
         if slug == 'psrl-staleness':
-            assert manifest['figures'] == 23
+            assert manifest['figures'] == 24
             assert body.count('<details markdown="1" class="protocol-detail"') == 7
             player = (destination/'animation/index.html').read_text(encoding='utf-8')
             assert "const base='../animation-layers/';" in player
