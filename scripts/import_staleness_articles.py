@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+from urllib.parse import urlsplit
 
 from PIL import Image
 
@@ -91,6 +92,7 @@ def import_post(source, slug):
     copied = {}
     figures = re.findall(r'!\[[^\]]*\]\((assets/[^)]+)\)', original)
     for figure in sorted(set(figures)):
+        figure = urlsplit(figure).path
         relative = figure.removeprefix(settings['asset_prefix'])
         if relative == figure:
             raise ValueError(f'Unexpected asset location: {figure}')
