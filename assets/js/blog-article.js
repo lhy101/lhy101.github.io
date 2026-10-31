@@ -13,7 +13,7 @@
     const chinese = (text.match(/\p{Script=Han}/gu) || []).length;
     const words = (text.replace(/\p{Script=Han}/gu, ' ').match(/[\p{L}\p{N}]+(?:[._'’-][\p{L}\p{N}]+)*/gu) || []).length;
     const count = chinese + words;
-    const speed = Math.max(1, Number(readingInfo.dataset.readingSpeed) || 300);
+    const speed = Math.max(1, Number(readingInfo.dataset.readingSpeed) || 500);
     const minutes = Math.max(1, Math.ceil(count / speed));
     readingInfo.textContent = `全文约 ${count.toLocaleString('zh-CN')} 字 · 预计阅读 ${minutes} 分钟`;
     readingInfo.dataset.wordCount = count;

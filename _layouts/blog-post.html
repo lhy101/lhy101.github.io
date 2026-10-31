@@ -11,7 +11,7 @@ layout: default
         {% assign counter_endpoint = site.data.blog_counter.endpoint | default: '' | strip %}
         {% if counter_endpoint != '' %}<span class="blog-view-count" data-blog-views data-blog-path="{{ page.url | relative_url | escape }}" title="页面访问量，非独立读者数；统计可能延迟更新" hidden>阅读量 <span data-blog-views-count></span></span>{% endif %}
       </div>
-      <p class="blog-article__reading" data-reading-info data-reading-speed="{% if page.lang contains 'zh' %}{{ site.blog_zh_words_per_minute | default: 300 }}{% else %}{{ site.words_per_minute | default: 200 }}{% endif %}" hidden></p>
+      <p class="blog-article__reading" data-reading-info data-reading-speed="{% if page.lang contains 'zh' %}{{ site.blog_zh_words_per_minute | default: 500 }}{% else %}{{ site.words_per_minute | default: 200 }}{% endif %}" hidden></p>
     </header>
     <details class="blog-toc" hidden>
       <summary>文章目录</summary>
