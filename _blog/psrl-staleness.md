@@ -81,7 +81,7 @@ $$
 
 有了这 $$3$$ 种状态，L1 准入检查就很好理解了：**看看现在还能不能为这条 trajectory 做一次 *Reserve*。** 我们扫描尚未取用、满足 $$v_{\text{buffer}}\leq v_{\text{traj}}+\eta$$ 的 buffer，检查其中是否还有 *Empty* 槽位。有的话，先把一个空槽变成这条 trajectory 的 *Reserved*，再开始生成。没有的话，就无法保证新准入的 trajectory 生成完毕后还有合法位置，因此必须暂缓准入。
 
-![L1 准入：四条 trajectory 依次 Reserve，准入时获得版本并开始生成，两个合法 buffer 满后暂缓新准入]({{ '/assets/blog/psrl-staleness/reserve-admission.gif?v=20261031-admission-v2' | relative_url }})
+![L1 准入：四条 trajectory 依次 Reserve，准入时获得版本并开始生成，两个合法 buffer 满后 E 暂缓准入]({{ '/assets/blog/psrl-staleness/reserve-admission.gif?v=20261031-admission-v3' | relative_url }})
 
 *Reserved* 虽然还没有实际数据，但也不能再算成空槽，因为它已经为一条在途 trajectory 留好了位置。多个 trajectory 同时准入时，也必须以成功预留为准，不能因为各自都看到过空位，就一起开始生成。这样，每条成功准入的 trajectory 才确实有一个合法位置可去。
 
