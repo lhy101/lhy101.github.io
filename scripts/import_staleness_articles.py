@@ -13,14 +13,14 @@ POSTS = {
     'async-rl-staleness': {
         'source': 'async-rl-staleness-blog.zh-CN.md',
         'date': '2026-10-22', 'series': 'PSRL / 01', 'cover': 'cover.webp',
-        'description': '从 trajectory 的生命周期出发，对照 10 个异步 RL 框架的源码，分析不同框架的三层 staleness 控制机制。',
+        'description': '我们从 trajectory 的生命周期出发，对照 10 个异步 RL 框架的源码，分析不同框架的三层 staleness 控制机制。',
         'cover_alt': '10 个异步 RL 框架的 L1、L2、L3 控制机制与严格 staleness 控制对比',
         'asset_prefix': 'assets/async-rl-staleness-blog/',
     },
     'psrl-staleness': {
         'source': 'psrl-staleness-blog.zh-CN.md',
         'date': '2026-10-31', 'series': 'PSRL / 03', 'cover': 'cover.svg',
-        'description': '以 Reserve–Occupy 协议协同生成准入与训练放置，严格控制 staleness，并通过 SimRL 实验比较有效训练吞吐。',
+        'description': '我们设计了一套 Reserve–Occupy 协议，在严格控制 staleness 的前提下，不丢弃任何数据，并最大化有效 RL 训练吞吐。',
         'cover_alt': 'Reserve–Occupy 协议：生成前预留合法位置，完成后尽早放置，并共同满足版本上限',
         'asset_prefix': 'assets/psrl-staleness/',
     },

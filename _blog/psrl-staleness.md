@@ -1,7 +1,7 @@
 ---
 layout: "blog-post"
 title: "异步 RL 框架的 Staleness，究竟怎么控制（三）？"
-description: "以 Reserve–Occupy 协议协同生成准入与训练放置，严格控制 staleness，并通过 SimRL 实验比较有效训练吞吐。"
+description: "我们设计了一套 Reserve–Occupy 协议，在严格控制 staleness 的前提下，不丢弃任何数据，并最大化有效 RL 训练吞吐。"
 date: "2026-10-31"
 lang: "zh-CN"
 series: "PSRL / 03"

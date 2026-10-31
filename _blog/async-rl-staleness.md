@@ -1,7 +1,7 @@
 ---
 layout: "blog-post"
 title: "异步 RL 框架的 Staleness，究竟怎么控制（一）？"
-description: "从 trajectory 的生命周期出发，对照 10 个异步 RL 框架的源码，分析不同框架的三层 staleness 控制机制。"
+description: "我们从 trajectory 的生命周期出发，对照 10 个异步 RL 框架的源码，分析不同框架的三层 staleness 控制机制。"
 date: "2026-10-22"
 lang: "zh-CN"
 series: "PSRL / 01"
