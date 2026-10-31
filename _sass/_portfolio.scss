@@ -166,6 +166,7 @@ body { padding-bottom: 0; font-family: var(--font-body); letter-spacing: 0; }
 .blog-article__content h3 { margin: 1.7rem 0 .65rem; color: var(--ink); font-size: 1.2rem; font-weight: 650; line-height: 1.35; scroll-margin-top: 1.5rem; }
 .blog-article__content h4 { margin: 1.35rem 0 .55rem; color: var(--accent-dark); font-size: 1.05rem; font-weight: 650; scroll-margin-top: 1.5rem; }
 .blog-article__content p { margin: 0 0 1rem; font-size: inherit; line-height: inherit; }
+.blog-article__content .blog-article__reading { margin: -.4rem 0 1.1rem; color: var(--ink-soft); font-size: .78rem; line-height: 1.6; font-variant-numeric: tabular-nums; }
 .blog-article__content ul, .blog-article__content ol { margin: 0 0 1.1rem; padding-left: 1.5rem; }
 .blog-article__content li { margin: .3rem 0; }
 .blog-article__content iframe.protocol-player { display: block; width: 100%; max-width: 100%; border: 0; margin: 1.25rem 0; }

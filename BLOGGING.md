@@ -32,6 +32,9 @@ series: "可选的系列名称"
 - 折叠内容使用 `<details markdown="1"><summary>标题</summary>`，内部 Markdown 前后留空行，以便 Kramdown 正确解析。需要加入目录时，添加 `class="framework-detail"`，其标题会作为四级目录项，点击后自动展开内容。
 - 独立公式使用单独一行的 `$$` 包裹，公式块前后各留一空行，避免被解析成行内公式。不需要编号时，在公式块内使用 `\begin{equation*}` 和 `\end{equation*}`。
 - `lang` 可改为 `en`；`series` 可省略。
+- 每篇文章标题下自动显示“全文约 ×× 字 · 预计阅读 ×× 分钟”，无需手填字数。统计包含折叠正文，中文逐字、英文和数字按词计数，排除代码块、公式和图片内容；中文按每分钟 300 字估算，可在 `_config.yml` 中用 `blog_zh_words_per_minute` 调整，其他语言沿用 `words_per_minute`。
+
+阅读提示参考 [FixIt 文档页](https://fixit.lruihao.cn/zh-cn/documentation/content-management/introduction/)的“约 ×× 字 / 预计阅读 ×× 分钟”表述，以及 NexT 的字数与阅读时长元信息，用一行小字放在标题和目录之间。
 
 ## 阅读量统计（可选）
 

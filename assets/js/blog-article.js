@@ -3,6 +3,24 @@
   const toc = document.querySelector('.blog-toc');
   if (!article || !toc) return;
 
+  const readingInfo = document.querySelector('[data-reading-info]');
+  if (readingInfo) {
+    // Count the authored prose, including closed disclosures, without MathJax's
+    // duplicate renderings, TeX source, code blocks, or text inside illustrations.
+    const prose = article.cloneNode(true);
+    prose.querySelectorAll('h1, pre, script, style, noscript, svg, math, mjx-container, iframe, canvas, .MathJax, .MathJax_Display, .MathJax_Preview, .MJXc-display, .MJX_Assistive_MathML, .blog-toc, [data-reading-info]').forEach(node => node.remove());
+    const text = prose.textContent.replace(/\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]/g, ' ');
+    const chinese = (text.match(/\p{Script=Han}/gu) || []).length;
+    const words = (text.replace(/\p{Script=Han}/gu, ' ').match(/[\p{L}\p{N}]+(?:[._'’-][\p{L}\p{N}]+)*/gu) || []).length;
+    const count = chinese + words;
+    const speed = Math.max(1, Number(readingInfo.dataset.readingSpeed) || 300);
+    const minutes = Math.max(1, Math.ceil(count / speed));
+    readingInfo.textContent = `全文约 ${count.toLocaleString('zh-CN')} 字 · 预计阅读 ${minutes} 分钟`;
+    readingInfo.dataset.wordCount = count;
+    readingInfo.dataset.readingMinutes = minutes;
+    readingInfo.hidden = false;
+  }
+
   const headings = [...article.querySelectorAll('h2, h3, h4, details:is(.framework-detail, .protocol-detail) > summary')];
   const uniqueId = base => {
     let id = base;
@@ -41,7 +59,7 @@
     outline.push({ level, item });
   });
   // Keep the title first while giving long articles a compact, optional outline.
-  article.querySelector('h1')?.after(toc);
+  article.querySelector('h1')?.after(...[readingInfo, toc].filter(Boolean));
   toc.hidden = headings.length === 0;
 
   const protocolFrame = article.querySelector('iframe.protocol-player');
