@@ -1,0 +1,2 @@
+# Keep imported publication assets byte-identical to their source manifests.
+assets/blog/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
