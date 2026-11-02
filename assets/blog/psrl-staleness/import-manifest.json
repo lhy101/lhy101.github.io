@@ -1,6 +1,6 @@
 {
   "source": "psrl-staleness-blog.zh-CN.md",
-  "source_sha256": "8b9f31bf89fa292d0d2a27c34a2f4aff3fad08df709da79f9f4bb0a98bf55f5b",
+  "source_sha256": "8910a2a6d1f2f0e1f007a1714445e64628c6950b0644c408fcf655ec78d96881",
   "figures": 24,
   "copied_assets": {
     "buffer-states-feedback.svg": "419a7a94567498acc6153925ec8a8ba23136fd8f4c59eb646ab058b192ce20ac",
@@ -13,7 +13,7 @@
     "clips/07-blocked-next-buffer.gif": "1df9db9b0034e0a61d3d61495cd00d62b5b1b4caff1e84e4dc6ee182e91c5199",
     "exp/length_histograms-blog.png": "4aca1901b61769bf9bb545f339e2f1d82fe4b9ee6dcedf751c34f2b19928ed65",
     "exp/length_histograms_longtail-blog.png": "58d98e88f33fe88f2fe613d961363af3e10924655d146f7c613a9fcdabaddc66",
-    "exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png": "184cfdc2555b02950c5847288f2f3496b48816568d7ebbc25f7c2660a450b9d4",
+    "exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png": "280ad6b8acf68dc2d8c0662cfe96e2e3110fa70182282f94314559df65ce2a5c",
     "exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10_longtail-blog.png": "10c7eef9d76d84f9bfe6c0a3c3382ab1654d38838421a75d70addc91193e5747",
     "exp/staleness_composition_grid-blog.png": "1e10250fd0741b6869289de92089ef41139b34004cd53100a9bc7d2fc77aeaa0",
     "exp/staleness_composition_grid_longtail-blog.png": "a7784eb11885f5d79005f39d22a231df5b503f025576ff5773df42174b93de34",
