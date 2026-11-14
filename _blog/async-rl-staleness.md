@@ -102,7 +102,7 @@ prompt 还没开始生成时，系统要先决定是否准入。通过准入控�
 
 ![10 个系统的三层控制与严格 staleness 控制，具体配置见下文]({{ '/assets/blog/async-rl-staleness/systems-layer-map.svg' | relative_url }})
 
-下面，你可以点击具体框架的名称，展开查看详细分析。
+下面是每个框架的具体分析。
 
 <details markdown="1" class="framework-detail" id="framework-verl">
 <summary>verl</summary>

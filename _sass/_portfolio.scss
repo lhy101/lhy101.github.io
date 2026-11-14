@@ -207,8 +207,17 @@ body { padding-bottom: 0; font-family: var(--font-body); letter-spacing: 0; }
 .blog-toc a { display: block; padding: .18rem .25rem; border-radius: 3px; color: var(--accent-dark); font-size: inherit; font-weight: 400; line-height: 1.5; text-decoration: none; }
 .blog-toc nav > ol > li > a { font-weight: 650; }
 .blog-toc a:hover { background: var(--accent-wash); }
-.blog-article__footer { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: .82rem; }
+.blog-article__footer { margin-top: 2.2rem; padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: .82rem; }
 .blog-article__footer a { color: var(--accent-dark); }
+.blog-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; margin-bottom: 1rem; }
+.blog-pagination__link { display: flex; flex-direction: column; gap: .5rem; min-width: 0; padding: 1rem 1.1rem; border: 1px solid var(--line); border-radius: 8px; background: #f8f9f5; text-decoration: none; transition: background .2s, border-color .2s; }
+.blog-pagination__link:hover { border-color: #a7b9a3; background: #f1f5ed; text-decoration: none; }
+.blog-pagination__link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.blog-pagination__link--next { grid-column: 2; text-align: right; }
+.blog-pagination__label { color: var(--ink-soft); font-size: .75rem; line-height: 1.5; }
+.blog-pagination__title { color: var(--ink); font-family: var(--font-editorial); font-size: 1.03rem; line-height: 1.55; overflow-wrap: anywhere; }
+.blog-article__utilities { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1rem; }
+.blog-article__utilities a { display: inline-flex; align-items: center; min-height: 44px; }
 
 .page__footer { position: relative; float: none; margin: 0; border-top: 1px solid var(--line); background: #eeefe7; color: var(--ink-soft); animation: none; }
 .page__footer footer { max-width: 980px; margin: 0 auto; padding: 2.2rem 2.4rem 1.6rem; }
@@ -317,6 +326,9 @@ body { padding-bottom: 0; font-family: var(--font-body); letter-spacing: 0; }
   .blog-article__content th, .blog-article__content td { min-width: 4.5rem; padding: .4rem .5rem; }
   .blog-toc { font-size: .82rem; }
   .blog-article__footer { font-size: .76rem; }
+  .blog-pagination { grid-template-columns: 1fr; gap: .65rem; }
+  .blog-pagination__link { padding: .9rem 1rem; }
+  .blog-pagination__link--next { grid-column: 1; }
 }
 @media (max-width: 360px) {
   .site-brand__name > span { display: none; }

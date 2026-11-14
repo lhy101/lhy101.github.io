@@ -1,0 +1,32 @@
+{% assign reading_order = site.blog | sort: 'date' | sort: 'list_order' %}
+{% assign previous_article = nil %}
+{% assign next_article = nil %}
+{% for post in reading_order %}
+  {% if post.url == page.url %}
+    {% unless forloop.first %}
+      {% assign previous_index = forloop.index0 | minus: 1 %}
+      {% assign previous_article = reading_order[previous_index] %}
+    {% endunless %}
+    {% unless forloop.last %}
+      {% assign next_index = forloop.index0 | plus: 1 %}
+      {% assign next_article = reading_order[next_index] %}
+    {% endunless %}
+    {% break %}
+  {% endif %}
+{% endfor %}
+{% if previous_article or next_article %}
+<nav class="blog-pagination" aria-label="文章翻页">
+  {% if previous_article %}
+  <a class="blog-pagination__link blog-pagination__link--previous" href="{{ previous_article.url | relative_url }}" rel="prev">
+    <span class="blog-pagination__label"><span aria-hidden="true">←</span> 上一篇</span>
+    <span class="blog-pagination__title">{{ previous_article.title | escape }}</span>
+  </a>
+  {% endif %}
+  {% if next_article %}
+  <a class="blog-pagination__link blog-pagination__link--next" href="{{ next_article.url | relative_url }}" rel="next">
+    <span class="blog-pagination__label">下一篇 <span aria-hidden="true">→</span></span>
+    <span class="blog-pagination__title">{{ next_article.title | escape }}</span>
+  </a>
+  {% endif %}
+</nav>
+{% endif %}
