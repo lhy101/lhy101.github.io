@@ -5,7 +5,9 @@ description: "我们设计了一套 Reserve–Occupy 协议，在严格控制 st
 date: "2026-10-31"
 lang: "zh-CN"
 series: "PSRL / 03"
-permalink: "/blog/psrl-staleness/"
+permalink: "/blog/async-rl-staleness-3/"
+redirect_from: ["/blog/psrl-staleness/"]
+list_order: 3
 cover: "/assets/blog/psrl-staleness/cover.svg?v=60fbd48e7a9b"
 cover_alt: "Reserve–Occupy 协议：生成前预留合法位置，完成后尽早放置，并共同满足版本上限"
 cover_width: 1280

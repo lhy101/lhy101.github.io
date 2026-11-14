@@ -13,7 +13,7 @@ author_profile: false
 
 <div class="blog-list">
   {% assign counter_endpoint = site.data.blog_counter.endpoint | default: '' | strip %}
-  {% assign articles = site.blog | sort: 'date' | reverse %}
+  {% assign articles = site.blog | sort: 'date' | reverse | sort: 'list_order' %}
   {% for post in articles %}
   <article class="blog-card" lang="{{ post.lang | default: 'en' }}">
     <a class="blog-card__visual" href="{{ post.url | relative_url }}" aria-label="{{ post.title | escape }}">

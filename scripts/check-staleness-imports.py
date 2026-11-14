@@ -26,13 +26,19 @@ def main():
             assert hashlib.sha256((destination/relative).read_bytes()).hexdigest() == expected, relative
         for match in re.finditer(r"\{\{ '/assets/blog/"+slug+r"/([^']+)' \| relative_url \}\}", body):
             assert (destination/match[1].split('?')[0]).is_file(), match[1]
-        assert f'permalink: "/blog/{slug}/"' in metadata
+        assert f'permalink: "/blog/{settings["url_slug"]}/"' in metadata
+        assert f'redirect_from: ["/blog/{slug}/"]' in metadata
+        assert f'list_order: {settings["list_order"]}' in metadata
         assert f'date: "{settings["date"]}"' in metadata
         assert re.findall(r'(?m)^#{1,6} .+$', original) == re.findall(r'(?m)^#{1,6} .+$', body)
         strip_equations = lambda text: re.sub(r'\\(?:begin|end)\{equation\*\}', '', text)
-        formulas = lambda text: [re.sub(r'\s+', '', strip_equations(m)) for m in re.findall(r'\$\$([\s\S]*?)\$\$', text)]
+        def formulas(text):
+            # The importer uses inline delimiters only inside HTML summaries.
+            normalized = re.sub(r'\\\(([\s\S]*?)\\\)', lambda m: '$$'+m[1]+'$$', text)
+            return [re.sub(r'\s+', '', strip_equations(m)) for m in re.findall(r'\$\$([\s\S]*?)\$\$', normalized)]
         assert formulas(original) == formulas(body), slug+' formula parity'
         assert len(re.findall('<details', original)) == len(re.findall('<details markdown="1"', body))
+        assert not re.search(r'<summary>[^<]*\$\$', body)
         assert manifest['figures'] == len(re.findall(r'!\[[^\]]*\]\((assets/[^)]+)\)', original))
         required = set(manifest['copied_assets']) | {settings['cover'], 'import-manifest.json'}
         if slug == 'psrl-staleness':

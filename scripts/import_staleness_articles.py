@@ -14,20 +14,23 @@ POSTS = {
     'async-rl-staleness': {
         'source': 'async-rl-staleness-blog.zh-CN.md',
         'date': '2026-10-22', 'series': 'PSRL / 01', 'cover': 'cover.webp',
+        'list_order': 1, 'url_slug': 'async-rl-staleness-1',
         'description': '我们从 trajectory 的生命周期出发，对照 10 个异步 RL 框架的源码，分析不同框架的三层 staleness 控制机制。',
         'cover_alt': '10 个异步 RL 框架的 L1、L2、L3 控制机制与严格 staleness 控制对比',
         'asset_prefix': 'assets/async-rl-staleness-blog/',
     },
     'simrl-staleness': {
         'source': 'simrl-staleness-blog.zh-CN.md',
-        'date': '2026-11-14', 'series': 'PSRL / 02', 'cover': 'matched_throughput-blog.png',
-        'description': '在 SimRL 的统一环境中比较各框架的 staleness 控制机制，分析有效吞吐、丢弃浪费、长尾等待与数据选择偏向。',
-        'cover_alt': '不同 staleness 上限下，各框架控制机制的有效吞吐对比',
+        'date': '2026-11-14', 'series': 'PSRL / 02', 'cover': 'cover.svg',
+        'list_order': 2, 'url_slug': 'async-rl-staleness-2',
+        'description': '在 RL 模拟器的统一环境中比较各框架的 staleness 控制机制，分析有效吞吐、丢弃浪费、长尾等待与数据选择偏向。',
+        'cover_alt': '14 个框架配置在 staleness 上限 1、2、3 下的端到端有效吞吐对比',
         'asset_prefix': 'assets/simrl-staleness/',
     },
     'psrl-staleness': {
         'source': 'psrl-staleness-blog.zh-CN.md',
         'date': '2026-10-31', 'series': 'PSRL / 03', 'cover': 'cover.svg',
+        'list_order': 3, 'url_slug': 'async-rl-staleness-3',
         'description': '我们设计了一套 Reserve–Occupy 协议，在严格控制 staleness 的前提下，不丢弃任何数据，并最大化有效 RL 训练吞吐。',
         'cover_alt': 'Reserve–Occupy 协议：生成前预留合法位置，完成后尽早放置，并共同满足版本上限',
         'asset_prefix': 'assets/psrl-staleness/',
@@ -49,6 +52,11 @@ def adapt_article(original, slug):
                      lambda match: '](' + asset_url(slug, match[1]) + ')', original)
     article = re.sub(r'<details(?![^>]*\bmarkdown=)([^>]*)>', r'<details markdown="1"\1>', article)
     article = re.sub(r'(<summary>\s*)\d+\.\d+\.?\s+', r'\1', article)
+    # Kramdown leaves summary contents as raw HTML. Use explicit inline TeX
+    # delimiters so MathJax does not turn a disclosure title into a block.
+    article = re.sub(r'(<summary>)([\s\S]*?)(</summary>)',
+                     lambda m: m[1] + re.sub(r'\$\$([\s\S]*?)\$\$',
+                                            lambda math: r'\(' + math[1] + r'\)', m[2]) + m[3], article)
     article = re.sub(r'(?m)^\$\$([^\n]+)\$\$[ \t]*$', r'$$\n\1\n$$', article)
 
     def display(match):
@@ -121,12 +129,15 @@ def import_post(source, slug):
         width, height = 1280, 720
         import_animation(source, destination, copied)
     else:
-        with Image.open(destination/settings['cover']) as cover:
-            width, height = cover.size
+        cover = source/'assets/simrl-staleness/throughput-cover.svg'
+        shutil.copy2(cover, destination/'cover.svg')
+        copied['cover.svg'] = sha256(cover)
+        width, height = 3200, 1920
     metadata = {
         'layout': 'blog-post', 'title': title, 'description': settings['description'],
         'date': settings['date'], 'lang': 'zh-CN', 'series': settings['series'],
-        'permalink': f'/blog/{slug}/',
+        'permalink': f'/blog/{settings["url_slug"]}/',
+        'redirect_from': [f'/blog/{slug}/'], 'list_order': settings['list_order'],
         'cover': f'/assets/blog/{slug}/{settings["cover"]}?v={sha256(destination/settings["cover"])[:12]}',
         'cover_alt': settings['cover_alt'], 'cover_width': width, 'cover_height': height,
         'author_profile': False,

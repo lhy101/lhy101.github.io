@@ -1,15 +1,17 @@
 ---
 layout: "blog-post"
 title: "异步 RL 框架的 Staleness，究竟怎么控制（二）？"
-description: "在 SimRL 的统一环境中比较各框架的 staleness 控制机制，分析有效吞吐、丢弃浪费、长尾等待与数据选择偏向。"
+description: "在 RL 模拟器的统一环境中比较各框架的 staleness 控制机制，分析有效吞吐、丢弃浪费、长尾等待与数据选择偏向。"
 date: "2026-11-14"
 lang: "zh-CN"
 series: "PSRL / 02"
-permalink: "/blog/simrl-staleness/"
-cover: "/assets/blog/simrl-staleness/matched_throughput-blog.png?v=e8ff4ccb1c32"
-cover_alt: "不同 staleness 上限下，各框架控制机制的有效吞吐对比"
-cover_width: 4400
-cover_height: 3360
+permalink: "/blog/async-rl-staleness-2/"
+redirect_from: ["/blog/simrl-staleness/"]
+list_order: 2
+cover: "/assets/blog/simrl-staleness/cover.svg?v=427901ed109d"
+cover_alt: "14 个框架配置在 staleness 上限 1、2、3 下的端到端有效吞吐对比"
+cover_width: 3200
+cover_height: 1920
 author_profile: false
 ---
 
@@ -92,12 +94,12 @@ $$
 
 [![各框架的控制位置、关键参数与严格 staleness 控制（理论分析）]({{ '/assets/blog/simrl-staleness/control-mechanisms-recall-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/control-mechanisms-recall-blog.png' | relative_url }})
 
-上表中，对于每个框架，我们用蓝色字体标记出了实验中核心调节的参数，其通常是整个框架中与 staleness 上限最直接相关的旋钮，也是用户在考虑 staleness 控制时会最优先使用到的参数。其余次要参数（会对 staleness 造成影响，但并不是主要控制旋钮）我们大多维持在框架的默认值（个别情况会在后文具体说明）。下面展示各框架的实验结果。
+上表中，对于每个框架，我们用蓝色字体标记出了实验中核心调节的参数，其通常是整个框架中与 staleness 上限最直接相关的旋钮，也是用户在考虑 staleness 控制时会最优先使用到的参数。下文将这类参数统一记为 $$\eta$$，它表示对应配置的取值，是否等于实际 staleness 上限还要看具体机制。其余次要参数（会对 staleness 造成影响，但并不是主要控制旋钮）我们大多维持在框架的默认值（个别情况会在后文具体说明）。下面展示各框架的实验结果。
 
 <details markdown="1" class="framework-detail" id="framework-verl">
 <summary>verl</summary>
 
-verl 有两个核心参数：`num_warmup_batches` 决定[启动时额外预取](https://github.com/verl-project/verl/blob/5b550b0c3dad8c7bb7aab834a3fe195f8cdfc517/verl/trainer/ppo/v1/trainer_base.py#L624-L651)多少批 prompt，对应 L1 准入。`max_off_policy_threshold` 决定 L3 的超限阈值，再由 `max_off_policy_strategy` 选择 [丢弃 `drop`](https://github.com/verl-project/verl/blob/5b550b0c3dad8c7bb7aab834a3fe195f8cdfc517/verl/trainer/ppo/v1/replay_buffer.py#L520-L539) 或 [等待 `wait`](https://github.com/verl-project/verl/blob/5b550b0c3dad8c7bb7aab834a3fe195f8cdfc517/verl/trainer/ppo/v1/replay_buffer.py#L541-L556)。本文分别将策略固定为默认的 `drop` 和作为对照的 `wait`，每个子图固定一个 `num_warmup_batches`，横轴扫描阈值 `max_off_policy_threshold`。阈值为 $$t$$ 时，预期的 token staleness 上限为 $$t-1$$。
+verl 有两个核心参数：`num_warmup_batches` 决定[启动时额外预取](https://github.com/verl-project/verl/blob/5b550b0c3dad8c7bb7aab834a3fe195f8cdfc517/verl/trainer/ppo/v1/trainer_base.py#L624-L651)多少批 prompt，对应 L1 准入。`max_off_policy_threshold` 决定 L3 的超限阈值，再由 `max_off_policy_strategy` 选择 [丢弃 `drop`](https://github.com/verl-project/verl/blob/5b550b0c3dad8c7bb7aab834a3fe195f8cdfc517/verl/trainer/ppo/v1/replay_buffer.py#L520-L539) 或 [等待 `wait`](https://github.com/verl-project/verl/blob/5b550b0c3dad8c7bb7aab834a3fe195f8cdfc517/verl/trainer/ppo/v1/replay_buffer.py#L541-L556)。本文分别将策略固定为默认的 `drop` 和作为对照的 `wait`，每个子图固定一个 `num_warmup_batches`，横轴扫描阈值 `max_off_policy_threshold`。阈值为 $$\eta$$ 时，预期的 token staleness 上限为 $$\eta-1$$。
 
 **(1) `drop` 的实验结果**
 
@@ -131,47 +133,47 @@ verl 有两个核心参数：`num_warmup_batches` 决定[启动时额外预取](
 
 事实上，使用 `wait` 确实能保证一个 staleness 上界，不过该上界其实远比我们想的要大。
 
-记 $$W$$ 为预热参数 `num_warmup_batches`，$$T$$ 为阈值 `max_off_policy_threshold`，且两者均取正整数，那么所有参与训练的 token 都满足：
+记 $$W$$ 为预热参数 `num_warmup_batches`，$$\eta$$ 为阈值 `max_off_policy_threshold`，且两者均取正整数，那么所有参与训练的 token 都满足：
 
 $$
 \begin{equation*}
-\text{token staleness} \leq\max(W, T+W-2).
+\text{token staleness} \leq\max(W, \eta+W-2).
 \end{equation*}
 $$
 
-这个上界与我们直观期待的 $$T-1$$ 并不相同，而且还依赖预热量 $$W$$。例如，$$W=2$$、$$T=3$$ 时，上界是 $$3$$，而预期限制只有 $$2$$。感兴趣的读者可以展开下面的证明。
+这个上界与我们直观期待的 $$\eta-1$$ 并不相同，而且还依赖预热量 $$W$$。例如，$$W=2$$、$$\eta=3$$ 时，上界是 $$3$$，而预期限制只有 $$2$$。感兴趣的读者可以展开下面的证明。
 
 <details markdown="1" class="proof-detail" id="verl-wait-bound-proof">
-<summary>为什么上界是 $$\max(W,T+W-2)$$？</summary>
+<summary>为什么上界是 \(\max(W,\eta+W-2)\)？</summary>
 
 **先明确证明的条件。** 设一个训练 batch 包含 $$B$$ 个 group，$$B$$ 为正整数，训练版本从 $$0$$ 开始计数。启动时，系统额外预取 $$WB$$ 个，再加上首轮正常准入的 $$B$$ 个，共 $$(W+1)B$$ 个。之后，训练每推进一个版本，只新增 $$B$$ 个准入额度，每次取样也恰好消费 $$B$$ 个 group。取样优先选择**准入版本最老的已完成 group**，不会用更新版本的数据越过已经就绪的旧版本数据。
 
-此外，`wait` 不丢弃数据，但只要还有未完成 group 满足“当前训练版本减准入版本，再加 $$1$$，不小于 $$T$$”，就不能继续取样。
+此外，`wait` 不丢弃数据，但只要还有未完成 group 满足“当前训练版本减准入版本，再加 $$1$$，不小于 $$\eta$$”，就不能继续取样。
 
 固定一个准入版本 $$a$$，考察在这一版本准入的任意 group，同时把准入版本不超过 $$a$$、尚未被消费的 group 称为旧 group。记当前训练版本为 $$v$$。一条 token 的生成版本不早于其 group 的准入版本，因此，我们要证明的就是这个 group 被取用时 $$v-a$$ 的上界。
 
 **首先，计算最多还会积压多少旧 group。** 在版本 $$a$$ 本轮取样之前，累计准入额度最多为 $$(W+1+a)B$$，此前已经消费 $$aB$$ 个 group，所以未消费总量最多为 $$(W+1)B$$。版本 $$a$$ 再消费一批后，准入版本不超过 $$a$$ 的未消费 group 最多剩 $$WB$$ 个。此后新增的 group 都属于更新版本，不会增加这部分旧数据的数量。
 
-**当 $$T=1$$ 时，等待条件在 group 准入的当版就生效。** 所以训练不能越过尚未完成的 group。版本 $$a$$ 取样前至多积压 $$(W+1)B$$ 个旧 group，它们就绪后会优先被取走，最多占 $$W+1$$ 个 batch。第一批使用版本 $$a$$，最后一批至迟使用版本 $$a+W$$，故 $$v-a\leq W$$。若 group 在本轮取样之后才准入，则旧数据最多剩 $$WB$$ 个，从下一版开始取用，最后一批同样不晚于 $$a+W$$。
+**当 $$\eta=1$$ 时，等待条件在 group 准入的当版就生效。** 所以训练不能越过尚未完成的 group。版本 $$a$$ 取样前至多积压 $$(W+1)B$$ 个旧 group，它们就绪后会优先被取走，最多占 $$W+1$$ 个 batch。第一批使用版本 $$a$$，最后一批至迟使用版本 $$a+W$$，故 $$v-a\leq W$$。若 group 在本轮取样之后才准入，则旧数据最多剩 $$WB$$ 个，从下一版开始取用，最后一批同样不晚于 $$a+W$$。
 
-**当 $$T\geq2$$ 时，考察版本 $$a+T-1$$。** 到达这一版本后，只要仍有准入版本不超过 $$a$$ 的 group 尚未完成，等待检查就会阻止取样。因此，这一轮真正能够取样时，所有剩余旧 group 都已完成。此时已经过版本 $$a$$ 的首次取样，旧数据最多剩 $$WB$$ 个，又因为旧版本优先，最多再用 $$W$$ 个 batch 就能全部取完。最后一批使用的版本至迟为：
+**当 $$\eta\geq2$$ 时，考察版本 $$a+\eta-1$$。** 到达这一版本后，只要仍有准入版本不超过 $$a$$ 的 group 尚未完成，等待检查就会阻止取样。因此，这一轮真正能够取样时，所有剩余旧 group 都已完成。此时已经过版本 $$a$$ 的首次取样，旧数据最多剩 $$WB$$ 个，又因为旧版本优先，最多再用 $$W$$ 个 batch 就能全部取完。最后一批使用的版本至迟为：
 
 $$
 \begin{equation*}
 \begin{aligned}
-v&\leq(a+T-1)+(W-1)\\
- &=a+T+W-2.
+v&\leq(a+\eta-1)+(W-1)\\
+ &=a+\eta+W-2.
 \end{aligned}
 \end{equation*}
 $$
 
-在该门限之前就已经被消费的 group，版本差小于 $$T-1$$，也满足这一界。若运行较早结束，只会使实际能达到的版本差更小。
+在该门限之前就已经被消费的 group，版本差小于 $$\eta-1$$，也满足这一界。若运行较早结束，只会使实际能达到的版本差更小。
 
 合并两种情况，即得到：
 
 $$
 \begin{equation*}
-v - a\leq\max(W,T+W-2).
+v - a\leq\max(W,\eta+W-2).
 \end{equation*}
 $$
 
@@ -304,7 +306,7 @@ NeMo-RL 提供四种 sampler，详见[代码实现](https://github.com/NVIDIA-Ne
 
 [![NeMo-RL weight_fifo：只等窗口内最旧的一版]({{ '/assets/blog/simrl-staleness/sweep_nemo_weight_fifo-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_nemo_weight_fifo-blog.png' | relative_url }})
 
-图中所有点都未超限，实际最大 staleness 等于参数取值。参数为 $$1$$ 到 $$5$$ 时，有效吞吐依次为 $$1825$$、$$1748$$、$$1760$$、$$1764$$、$$1778$$ tokens/s。`weight_fifo` 之所以能守住上限，靠的是训练侧停等：设参数取值为 $$k$$，准入最多允许 $$k+1$$ 批在途，取样时只取最老的一批，凑不满就停下来等。每个训练版本消耗一批，最老的一批最多排在 $$k$$ 批之后，因此 staleness 不会超过 $$k$$。可见，它只停等，不丢弃数据。
+图中所有点都未超限，实际最大 staleness 等于参数取值。参数为 $$1$$ 到 $$5$$ 时，有效吞吐依次为 $$1825$$、$$1748$$、$$1760$$、$$1764$$、$$1778$$ tokens/s。`weight_fifo` 之所以能守住上限，靠的是训练侧停等：设参数取值为 $$\eta$$，准入最多允许 $$\eta+1$$ 批在途，取样时只取最老的一批，凑不满就停下来等。每个训练版本消耗一批，最老的一批最多排在 $$\eta$$ 批之后，因此 staleness 不会超过 $$\eta$$。可见，它只停等，不丢弃数据。
 
 [![NeMo-RL ready_first：只有 L1 准入，不按版本过滤]({{ '/assets/blog/simrl-staleness/sweep_nemo_ready_first-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_nemo_ready_first-blog.png' | relative_url }})
 
@@ -322,7 +324,7 @@ NeMo-RL 提供四种 sampler，详见[代码实现](https://github.com/NVIDIA-Ne
 
 上面的实验给出了各套机制的运行结果。在此基础上，我们想进一步探讨如下几个问题：仅靠 L1 准入时，超限在训练中有多普遍？放宽准入为什么不一定更快？L2 取消与 L3 过滤各自改变了什么？staleness 超限丢弃是否会改变训练数据的构成？在相同的 staleness 上限参数下，哪套机制能给出更高的吞吐？下面我们将依次展开。
 
-### 6. 仅靠准入额度，超限有多普遍？
+### 5. 仅靠准入额度，超限有多普遍？
 
 在前面的实验中，AReaL、SkyRL 与 NeMo-RL 的 `ready_first` 等都出现了超限，但实验结果图只给出了整次运行的宏观统计量。这里我们更进一步，逐训练 batch 统计超限出现的频率和覆盖面。下面以 AReaL 为例，取它最紧的异步设置 `max_head_offpolicyness=1`。
 
@@ -330,7 +332,7 @@ NeMo-RL 提供四种 sampler，详见[代码实现](https://github.com/NVIDIA-Ne
 
 图中，每根柱子对应一个训练 batch，按 staleness 分层，斜线阴影标出超过参数值的 trajectory。我们不难发现，**超限并非少数离群值**：$$50$$ 个 batch 中有 $$46$$ 个至少含一条超限 trajectory，$$6400$$ 条 trajectory 中累计 $$1280$$ 条超限。只有 $$4$$ 个 batch 完全没有超限。超限的 trajectory 中，$$1136$$ 条的 staleness 为 $$2$$，$$144$$ 条为 $$3$$。每个 batch 始终包含 $$128$$ 条 trajectory，这些超限数据并没有被过滤，全部实际参与了训练。因此，仅靠 L1 数量限制时，超限会持续出现在整个训练过程中，而非长尾导致的偶发现象。可以预见，这会对 RL 训练产生不可忽视且持续的影响。
 
-### 7. 准入量越大，吞吐就越高吗？
+### 6. 准入量越大，吞吐就越高吗？
 
 **增加准入额度可以提高并发，但不保证吞吐持续上升。** AReaL 与 SkyRL 都在参数为 $$1$$ 时达到吞吐的峰值。此后，继续增大 staleness 上限，AReaL 吞吐从 $$1916$$ 降到参数为 $$5$$ 时的 $$1787$$ tokens/s，下降 $$6.7\%$$。而 SkyRL 则下降 $$4.0\%$$。因此，继续扩大准入则未必有效。TRL 同时调整准入与版本上限，有效吞吐也不单调：参数从 $$1$$ 到 $$2$$ 时先下降 $$6.2\%$$，随后才随 waste 减少而回升。
 
@@ -338,31 +340,31 @@ NeMo-RL 提供四种 sampler，详见[代码实现](https://github.com/NVIDIA-Ne
 
 [![AReaL 与 SkyRL 随参数加深的抢占次数与重新 prefill 量]({{ '/assets/blog/simrl-staleness/preempt_reprefill-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/preempt_reprefill-blog.png' | relative_url }})
 
-**准入和 staleness 阈值是否可以独立调整，也会影响结果。** verl `drop` 分别使用 `num_warmup_batches` 与 `max_off_policy_threshold` 两个参数来调节准入与 staleness 阈值，TRL 则由一个 `max_staleness` 同时决定。下图在相同的预期 staleness 上限下比较两者：TRL 的 `max_staleness` 就是预期上限，verl 的阈值 $$t$$ 对应预期上限 $$t-1$$。我们在同一 staleness 上限下，对比二者的有效吞吐以及 waste 占比。
+**准入和 staleness 阈值是否可以独立调整，也会影响结果。** verl `drop` 分别使用 `num_warmup_batches` 与 `max_off_policy_threshold` 两个参数来调节准入与 staleness 阈值，TRL 则由一个 `max_staleness` 同时决定。下图在相同的预期 staleness 上限下比较两者：TRL 的 `max_staleness` 就是预期上限，verl 的阈值 $$\eta$$ 对应预期上限 $$\eta-1$$。我们在同一 staleness 上限下，对比二者的有效吞吐以及 waste 占比。
 
 [![相同预期上限下，TRL 与 verl drop 的有效吞吐和 waste]({{ '/assets/blog/simrl-staleness/trl_verl_matched-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/trl_verl_matched-blog.png' | relative_url }})
 
 从图中我们可以看到，预期上限为 $$0$$、$$1$$ 时，TRL 的有效吞吐较高，分别为 $$880$$ 和 $$1612$$ tokens/s，verl 为 $$838$$ 和 $$1436$$。为 $$2$$、$$3$$、$$4$$、$$5$$ 时，verl 较高，分别为 $$1816$$、$$1945$$、$$1945$$、$$1951$$，TRL 为 $$1513$$、$$1511$$、$$1563$$、$$1592$$。verl 在预期上限为 $$4$$、$$5$$ 时实际都只达到 staleness $$3$$，因此吞吐在 $$3$$ 之后基本走平，waste 维持为 $$0$$，而 TRL 则一路升到上限 $$5$$。这是因为 verl 可以独立限制预取量，将其控制在较低值，从而减少 waste。反观 TRL，其预取量也随 staleness 增大而膨胀，因此相应的 waste 在已测范围内无法降到零。
 
-### 8. 运行时取消（L2）与训练取样时过滤（L3）的影响是什么样的？
+### 7. 运行时取消（L2）与训练取样时过滤（L3）的影响是什么样的？
 
-为了进一步分析 L2 取消与 L3 过滤的作用，我们额外拼接了一个消融配置：L1 采用 AReaL 的额度桶，L2 采用 ROLL 的运行时取消，L3 采用 verl `drop` 的训练前过滤。L1-L3 三层共用同一个参数 $$k$$：L1 的准入上限由 $$k$$ 控制。L2 在每次发布新权重时，取消版本差已经超过 $$k$$、且仍在生成的 group。L3 则在训练前过滤掉版本差超过 $$k$$ 的数据。下图展示了逐级叠加 L1-L3 的结果对比。
+为了进一步分析 L2 取消与 L3 过滤的作用，我们额外拼接了一个消融配置：L1 采用 AReaL 的额度桶，L2 采用 ROLL 的运行时取消，L3 采用 verl `drop` 的训练前过滤。L1-L3 三层共用同一个参数 $$\eta$$：L1 的准入上限由 $$\eta$$ 控制。L2 在每次发布新权重时，取消版本差已经超过 $$\eta$$、且仍在生成的 group。L3 则在训练前过滤掉版本差超过 $$\eta$$ 的数据。下图展示了逐级叠加 L1-L3 的结果对比。
 
 [![同一准入下逐级叠加 L3 与 L2：吞吐、丢弃来源与实际 staleness]({{ '/assets/blog/simrl-staleness/ladder_l2_l3-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/ladder_l2_l3-blog.png' | relative_url }})
 
-**L1：** 参数 $$k$$ 从 $$1$$ 增至 $$5$$，实际最大 staleness 分别为 $$3$$、$$4$$、$$6$$、$$6$$、$$8$$，均超过 $$k$$。
+**L1：** 参数 $$\eta$$ 从 $$1$$ 增至 $$5$$，实际最大 staleness 分别为 $$3$$、$$4$$、$$6$$、$$6$$、$$8$$，均超过 $$\eta$$。
 
-**L1+L2：** 参数 $$k$$ 从 $$1$$ 增至 $$5$$，实际最大 staleness 为 $$2$$、$$3$$、$$4$$、$$5$$、$$6$$，始终比预期多 $$1$$ 个版本。相比只有 L1，其能在一定程度上降低最大 staleness，但仍没法严格控制。这是因为 L2 只在发布新权重时取消还在生成、且版本差已经超过 $$k$$ 的 group。已经完成、但版本差超过 $$k$$ 的 group 不会被取消，仍然会进入训练。
+**L1+L2：** 参数 $$\eta$$ 从 $$1$$ 增至 $$5$$，实际最大 staleness 为 $$2$$、$$3$$、$$4$$、$$5$$、$$6$$，始终比预期多 $$1$$ 个版本。相比只有 L1，其能在一定程度上降低最大 staleness，但仍没法严格控制。这是因为 L2 只在发布新权重时取消还在生成、且版本差已经超过 $$\eta$$ 的 group。已经完成、但版本差超过 $$\eta$$ 的 group 不会被取消，仍然会进入训练。
 
-**L1+L3：** 各点的实际最大 staleness 得以控制，并严格等于 $$k$$。但代价是吞吐显著降低：有效吞吐降至 $$1417$$–$$1578$$ tokens/s，较仅 L1 的总吞吐下降了 $$12\%$$–$$26\%$$。这主要是因为有 $$14.2\%$$–$$27.5\%$$ 的生成 token 被丢弃。
+**L1+L3：** 各点的实际最大 staleness 得以控制，并严格等于 $$\eta$$。但代价是吞吐显著降低：有效吞吐降至 $$1417$$–$$1578$$ tokens/s，较仅 L1 的总吞吐下降了 $$12\%$$–$$26\%$$。这主要是因为有 $$14.2\%$$–$$27.5\%$$ 的生成 token 被丢弃。
 
-**L1+L2+L3：** 实际最大 staleness 仍严格等于 $$k$$，但除 $$k=2$$ 基本持平外，有效吞吐较 L1+L3 提高 $$1\%$$–$$7\%$$。这是因为，启用 L2 后，一部分丢弃由 L3 的“完成后过滤”前移到了 L2 的“运行中取消”（图中阴影部分的不同占比说明了这一点）。可见，在 L1+L3 的前提下，L2 能带来额外收益：发布新权重时，那些已注定超限、却仍在生成的 group 会被立即取消，不再占用 rollout 容量。训练也因此无需等它们生成完成后再丢弃。
+**L1+L2+L3：** 实际最大 staleness 仍严格等于 $$\eta$$，但除 $$\eta=2$$ 基本持平外，有效吞吐较 L1+L3 提高 $$1\%$$–$$7\%$$。这是因为，启用 L2 后，一部分丢弃由 L3 的“完成后过滤”前移到了 L2 的“运行中取消”（图中阴影部分的不同占比说明了这一点）。可见，在 L1+L3 的前提下，L2 能带来额外收益：发布新权重时，那些已注定超限、却仍在生成的 group 会被立即取消，不再占用 rollout 容量。训练也因此无需等它们生成完成后再丢弃。
 
 不过，在 L3 的基础上增加 L2，waste 的比例并没有下降，反而从 $$14.2\%$$–$$27.5\%$$ 略升至 $$14.5\%$$–$$29.8\%$$。其背后的原因是，被释放的容量会继续生成替代数据，而其中一部分之后同样会被丢弃。由于 L2 丢弃得更早，最终整体丢弃量反而可能更多。因此，L2 虽然缩短了训练等待，却没有减少总浪费。
 
 总体而言，在这组消融实验中，L3 负责在训练取样时守住 staleness 上限，L2 则负责提前终止注定作废的生成。没有 L3 时，L2 只能取消运行中的 group，已完成的超限数据仍会进入训练，因此 **L3 才是 staleness 严格控制的关键**。L2 在此基础上提前停止无效生成，释放 rollout 容量，可以带来额外的吞吐收益，但不保证整体 waste 比例下降。
 
-### 9. 丢弃会偏向长 trajectory 吗？
+### 8. 丢弃会偏向长 trajectory 吗？
 
 实验中，我们用 waste 描述浪费了多少 token，却没有进一步分析：**最后留给训练的，究竟是哪一部分数据？** 对按 trajectory staleness 丢弃的机制，例如 verl `drop`、TRL 和 ROLL，response 越长，生成期间越可能跨过更多训练版本，也就越容易超限。因此，被丢弃的 trajectory 可能系统性地偏长。
 
@@ -393,19 +395,19 @@ Dressage 作为对照，表现出明显更弱的长度偏向。参数为 $$1$$ �
 
 总的来看，**丢弃带来了计算浪费，也带来了训练数据构成的变化**。这种数据构成变化对 RL 训练的影响可能比预想更复杂，也更难预先判断。因此，类似 NeMo-RL `weight_fifo` 以及 `in_order` 的控制机制其实值得更多关注与研究：它能在保证 staleness 的同时不产生任何丢弃，从而避免对数据构成的破坏。这也引出了我们后续第三篇博客的探讨。
 
-### 10. 相同 staleness 上限下的吞吐对比如何？
+### 9. 相同 staleness 上限下的吞吐对比如何？
 
-实际配置系统时，我们通常先确定能够接受的 staleness，再寻找这一限制下吞吐较高的参数。因此，我们这里可以做一个不同 RL 框架间相对公平的比较：给定 staleness 上限参数 $$S$$，各套机制在不超过该上限时，能提供多少有效吞吐？
+实际配置系统时，我们通常先确定能够接受的 staleness，再寻找这一限制下吞吐较高的参数。因此，我们这里可以做一个不同 RL 框架间相对公平的比较：给定 staleness 上限参数 $$\eta$$，各套机制在不超过该上限时，能提供多少有效吞吐？
 
-具体来说，我们对每个 $$S$$，选出在所有**实际最大 staleness 不超过 $$S$$** 的运行中，有效吞吐最高的配置，来进行对比。这里采用“不超过”，意味着更紧的设置（实际 staleness 更小）在更大的 $$S$$ 下仍然合格，可以继续成为最优点。按此方法，最优吞吐随 $$S$$ 增大必然单调不降。如果曲线不再上升，就说明在已扫描的参数范围内，继续增大 $$S$$ 已无额外收益。
+具体来说，我们对每个 $$\eta$$，选出在所有**实际最大 staleness 不超过 $$\eta$$** 的运行中，有效吞吐最高的配置，来进行对比。这里采用“不超过”，意味着更紧的设置（实际 staleness 更小）在更大的 $$\eta$$ 下仍然合格，可以继续成为最优点。按此方法，最优吞吐随 $$\eta$$ 增大必然单调不降。如果曲线不再上升，就说明在已扫描的参数范围内，继续增大 $$\eta$$ 已无额外收益。
 
 > **说明**：跨权重更新时（partial rollout 时），部分框架会保留旧 token 对应的 KV cache。按本文引用的版本，SkyRL 的 fully-async 路径和 prime-rl 默认会保留旧 KV，避免权重更新引起的 prefix 重算，这会一定程度上增大其吞吐。
 
 [![各框架在相同 staleness 上限参数下的最高有效吞吐]({{ '/assets/blog/simrl-staleness/matched_throughput-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/matched_throughput-blog.png' | relative_url }})
 
-从图中我们可以发现，$$14$$ 个配置中有 $$11$$ 个从参数 $$S=3$$ 起不再变化，除了 SkyRL、ROLL 和 NeMo-RL `windowed`：SkyRL 在 $$S=4$$ 时还有一次提升，ROLL 和 NeMo-RL `windowed` 则继续上升到 $$S=5$$。也就是说，**在当前负载、资源配比及扫描范围内，多数配置在 staleness 上限参数 $$S$$ 达到 $$2$$ 或 $$3$$ 后，已经无法通过继续增大参数获得更高吞吐。**
+从图中我们可以发现，$$14$$ 个配置中有 $$11$$ 个从参数 $$\eta=3$$ 起不再变化，除了 SkyRL、ROLL 和 NeMo-RL `windowed`：SkyRL 在 $$\eta=4$$ 时还有一次提升，ROLL 和 NeMo-RL `windowed` 则继续上升到 $$\eta=5$$。也就是说，**在当前负载、资源配比及扫描范围内，多数配置在 staleness 上限参数 $$\eta$$ 达到 $$2$$ 或 $$3$$ 后，已经无法通过继续增大参数获得更高吞吐。**
 
-首先，我们可以发现，当 staleness 上限较小时，在严格的 staleness 约束下，部分框架甚至没有可用配置（我们不考虑彻底同步的配置）。如果算法侧只能容忍很紧的 staleness，例如要求实际最大 staleness 不超过 $$1$$ 或 $$2$$，那么此时，就基本只能选择那些具有严格 staleness 控制的框架。例如，如果要求 $$S=1$$，那么 AReaL、SkyRL、slime、OpenRLHF、Dressage 以及 NeMo-RL `ready_first` 均无法使用，因为其最小实际 staleness 是 $$3$$。能采用的是 verl `drop`、verl `wait`、TRL、ROLL、prime-rl，以及 NeMo-RL 的 `windowed`、`in_order` 和 `weight_fifo`。在这些框架中，我们不难发现，不涉及 L3 丢弃的 NeMo-RL `in_order` 和 `weight_fifo` 很有竞争力：$$S=1$$ 时 `weight_fifo` 为 $$1826$$、`in_order` 为 $$1744$$，都高于同样具有严格 staleness 控制的 TRL（$$1612$$）、ROLL（$$1512$$）、NeMo-RL `windowed`（$$1465$$）、verl `drop`（$$1438$$）和 prime-rl（$$1405$$）。而 $$S=2$$ 时 NeMo-RL 的 `weight_fifo` 为 $$1826$$、`in_order` 为 $$1777$$，与 verl `drop` 的 $$1824$$ 基本持平，并且同样优于其余严格控制 staleness 的方案。二者的性能仅次于 verl `wait`。**可见，在严格容忍度下，用等待换不丢弃并没有牺牲吞吐，反而往往比在 L1 准入时不加考虑、全部交给 L3 丢弃效果更好。**
+首先，我们可以发现，当 staleness 上限较小时，在严格的 staleness 约束下，部分框架甚至没有可用配置（我们不考虑彻底同步的配置）。如果算法侧只能容忍很紧的 staleness，例如要求实际最大 staleness 不超过 $$1$$ 或 $$2$$，那么此时，就基本只能选择那些具有严格 staleness 控制的框架。例如，如果要求 $$\eta=1$$，那么 AReaL、SkyRL、slime、OpenRLHF、Dressage 以及 NeMo-RL `ready_first` 均无法使用，因为其最小实际 staleness 是 $$3$$。能采用的是 verl `drop`、verl `wait`、TRL、ROLL、prime-rl，以及 NeMo-RL 的 `windowed`、`in_order` 和 `weight_fifo`。在这些框架中，我们不难发现，不涉及 L3 丢弃的 NeMo-RL `in_order` 和 `weight_fifo` 很有竞争力：$$\eta=1$$ 时 `weight_fifo` 为 $$1826$$、`in_order` 为 $$1744$$，都高于同样具有严格 staleness 控制的 TRL（$$1612$$）、ROLL（$$1512$$）、NeMo-RL `windowed`（$$1465$$）、verl `drop`（$$1438$$）和 prime-rl（$$1405$$）。而 $$\eta=2$$ 时 NeMo-RL 的 `weight_fifo` 为 $$1826$$、`in_order` 为 $$1777$$，与 verl `drop` 的 $$1824$$ 基本持平，并且同样优于其余严格控制 staleness 的方案。二者的性能仅次于 verl `wait`。**可见，在严格容忍度下，用等待换不丢弃并没有牺牲吞吐，反而往往比在 L1 准入时不加考虑、全部交给 L3 丢弃效果更好。**
 
 其次，若算法侧对 staleness 容忍度较高，infra 选型的重点便转向上限放宽后的绝对系统吞吐。此时领先的是 SkyRL（$$2053$$ tokens/s），slime 与 Dressage 紧随其后（都是 $$2012$$），再往下是 AReaL（$$1959$$）以及 verl 与 OpenRLHF（$$1951$$）。而 TRL、ROLL 和 NeMo-RL `windowed` 等其余方法则明显落后。我们发现，影响吞吐的一个重要因素，是框架能否把 **L1 容量参数和 staleness 上限参数解耦**。Dressage 的 `max_active_groups`、OpenRLHF 的 `async_queue_size`、slime 的 `group_prefetch_factor`、verl 的 `num_warmup_batches` 都可以单独设置，与控制 staleness 上限的参数互不干扰。因此，这些框架可以在放宽 staleness 上限的同时把准入保持在较小额度，避免 KV 压满。如果框架采用 L3 丢弃（例如 verl `drop`），其甚至能让框架在高 staleness 上限下彻底避免 L3 丢弃。而 TRL 和 ROLL 则是一个参数同时决定准入容量和 staleness 上限，放宽 staleness 上限就顺带增加在途 trajectory 数目，导致更多的抢占、重新 prefill 以及 L3 丢弃，使得吞吐受损。NeMo-RL `windowed` 的容量与版本窗口则可以独立设置，因此各框架的吞吐差距还需结合实际准入量、丢弃和等待情况来看。
 

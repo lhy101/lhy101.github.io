@@ -32,6 +32,13 @@
   disclosures.forEach((detail, index) => {
     detail.id ||= uniqueId(`framework-${index + 1}`);
   });
+  // Recompute formula layout after previously hidden proof text becomes visible.
+  article.addEventListener('toggle', event => {
+    const detail = event.target;
+    if (!detail.matches('details') || !detail.open) return;
+    const hub = window.MathJax?.Hub;
+    if (hub) hub.Queue(['Rerender', hub, detail]);
+  }, true);
   const root = toc.querySelector('ol');
   root.replaceChildren();
   const outline = [];

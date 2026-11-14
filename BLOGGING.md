@@ -1,6 +1,6 @@
 # 添加博客
 
-文章放在 `_blog/`，列表会按日期倒序自动更新，无需修改导航或列表模板。
+文章放在 `_blog/`，列表优先按可选的 `list_order` 从小到大排列，其余文章按日期倒序显示。staleness 系列固定按（一）、（二）、（三）排列，日期保留原值。
 
 新建 `_blog/your-slug.md`：
 
@@ -82,15 +82,19 @@ python scripts/import-staleness-blog.py 'C:\Users\lihaoyang\Desktop\workspace\bl
 
 只导入（一）、（二）、（三）时，分别使用 `--article async-rl-staleness`、`--article simrl-staleness`、`--article psrl-staleness`。
 
-（二）保存在 `_blog/simrl-staleness.md`，地址为 `/blog/simrl-staleness/`。列表封面直接复用正文中的 `matched_throughput-blog.png`，不另存副本。
+系列的统一地址为 `/blog/async-rl-staleness-1/`、`/blog/async-rl-staleness-2/`、`/blog/async-rl-staleness-3/`。原来的三个地址通过 `redirect_from` 自动跳转，文章文件名和资源目录保持不变。
 
-（三）保存在 `_blog/psrl-staleness.md`，地址为 `/blog/psrl-staleness/`，日期为 2026-10-31。导入保留原文内容、公式、折叠区和媒体结构，并迁移交互动画所需的页面与图层。动画播放器位于该文章资源目录的 `animation/index.html`，文章会按播放器发送的高度自动调整 iframe。
+（二）保存在 `_blog/simrl-staleness.md`。列表封面来自 blog 工作区的 `throughput-cover.svg`，节选正文端到端柱状图的前 3 档 staleness 上限，保留全部 14 个配置。封面不带脚注，仅复制发布版 SVG，尺寸为 3200 × 1920。
+
+（三）保存在 `_blog/psrl-staleness.md`，日期为 2026-10-31。导入保留原文内容、公式、折叠区和媒体结构，并迁移交互动画所需的页面与图层。动画播放器位于该文章资源目录的 `animation/index.html`，文章会按播放器发送的高度自动调整 iframe。
 
 （三）的列表封面使用 `cover.svg`，来自 blog 工作区的 `protocol-cover.svg`，逻辑尺寸 1280 × 720。它由 `scripts/draw_psrl_cover.py` 基于正文协议图的绘图组件生成，保留原有正文图片。更新封面后再运行导入命令。
 
 每篇文章的资源目录包含 `import-manifest.json`，记录源文 SHA-256 与复制资源的 SHA-256。导入只复制正文、封面和动画实际需要的文件，不复制实验源码、角色素材或检查截图。导入器会清理这三个文章资源目录内已不再使用的媒体和重复格式，目录中不要放置其他文件。
 
 导入后可运行 `python scripts/check-staleness-imports.py 'C:\Users\lihaoyang\Desktop\workspace\blog'`，核对正文、公式、资源哈希和动画路径。
+
+折叠标题中的公式会转换为 `\(...\)`，避免 MathJax 把标题拆成带编号的独立公式块。`proof-detail` 与框架折叠区共用样式，展开后会重新计算隐藏公式的布局。
 
 播放器回归检查使用 `node scripts/check-psrl-playback.cjs`（需要 Playwright 与 Chrome，可通过 `CODEX_NODE_MODULES`、`PSRL_BROWSER_PATH` 指定）。它验证从头持续播放、画面推进、暂停、继续、拖动和重新播放，并模拟嵌入浏览器的动画回调时间起点偏移。播放器统一使用自身的 `performance.now()` 计时，避免 iframe 内出现负数进度。可用 `PSRL_PLAYER_URL` 指定线上播放器地址。
 

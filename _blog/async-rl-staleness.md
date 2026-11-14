@@ -5,7 +5,9 @@ description: "我们从 trajectory 的生命周期出发，对照 10 个异步 R
 date: "2026-10-22"
 lang: "zh-CN"
 series: "PSRL / 01"
-permalink: "/blog/async-rl-staleness/"
+permalink: "/blog/async-rl-staleness-1/"
+redirect_from: ["/blog/async-rl-staleness/"]
+list_order: 1
 cover: "/assets/blog/async-rl-staleness/cover.webp?v=44b27205b1d2"
 cover_alt: "10 个异步 RL 框架的 L1、L2、L3 控制机制与严格 staleness 控制对比"
 cover_width: 2368
@@ -317,14 +319,14 @@ if version_switches <= max_partial_rollout_preempts:
 <details markdown="1" class="framework-detail" id="framework-nemo-rl">
 <summary>NeMo-RL</summary>
 
-NeMo-RL 用一个统一控制器协调生成和训练，并提供四种 sampler 来决定准入方式和训练取样策略。表中先给出它们在三层上的区别。
+NeMo-RL 用一个统一控制器协调生成和训练，并提供四种 sampler 来决定准入方式和训练取样策略。下面用 $$\eta$$ 表示各 sampler 的核心 staleness 控制参数，表中先给出它们在三层上的区别。
 
 
 | sampler | 概括 | L1 准入 | L2 生成中 | L3 训练前 | 严格 staleness 控制（按本文定义） |
 |---|---|---|---|---|---|
 | `windowed` | 准入不看训练进度，取样时按版本窗口筛，超限的在途和已完成结果都淘汰 | ✓ | ✓ | ✓ | ✓ |
-| `weight_fifo` | 准入最多领先 $$k$$ 批，取样只取当前最老的权重版本，凑不齐就等 | ✓ | ✗ | ✓ | ✓ |
-| `ready_first` | 准入最多领先 $$k$$ 批，取样只取先完成的，不比较版本 | ✓ | ✗ | ✗ | ✗ |
+| `weight_fifo` | 准入最多领先 $$\eta$$ 批，取样只取当前最老的权重版本，凑不齐就等 | ✓ | ✗ | ✓ | ✓ |
+| `ready_first` | 准入最多领先 $$\eta$$ 批，取样只取先完成的，不比较版本 | ✓ | ✗ | ✗ | ✗ |
 | `in_order` | 准入时把每批绑定到训练步，到该步只取这一批，未就绪就等 | ✓ | ✗ | ✓ | ✓ |
 
 NeMo-RL 提供了一个核心参数 `max_staleness_versions`，其在不同 sampler 中管的事情不同：`windowed` 用它过滤超限 group，`weight_fifo` 同时用它限制准入提前量和取样时需要等待的版本，`ready_first` 只用它限制准入提前量。`in_order` 则用一个单独的 `max_lookahead_versions` 限制准入提前量，并在准入时指定每批结果对应的训练版本。下面按三层展开，具体实现可对照[四种 sampler 的代码](https://github.com/NVIDIA-NeMo/RL/blob/726d5eb225a8ae21e14b6778e56abfab2d794513/nemo_rl/algorithms/async_utils/staleness_sampler.py#L361-L712)。
@@ -343,7 +345,7 @@ NeMo-RL 提供了一个核心参数 `max_staleness_versions`，其在不同 samp
 
 `in_order` 不按版本差过滤，而是只取准入时指定用于当前训练版本的 group。沿用 L1 的例子，设 `max_lookahead_versions=2`，训练还在 $$v_0$$ 时准入的三批 prompt 分别指定给 $$v_0$$、$$v_1$$、$$v_2$$ 训练。其中指定给 $$v_2$$ 的那批，结果再早完成也要等到 $$v_2$$ 才取样。如果尚未准备好，训练就在 $$v_2$$ 等待，不会先跳到 $$v_3$$ 再用它。因而在生成权重随训练版本同步的正常训练流程下，这项提前量限制也就形成了 staleness 上限。
 
-我们可以发现，`in_order` 与 `weight_fifo` 二者其实殊途同归。稳定后每个训练批次恰好对应一个权重版本，两者行为完全重合：`weight_fifo` 下需要等待的那个最老的权重版本的批次，正好就是 `in_order` 下绑定给当前训练步的批次。事实上，二者的差别只在预热阶段：假设 `in_order` 下的 `max_lookahead_versions` 等于 $$k$$，那么最初的 $$k + 1$$ 批 prompt 都由 $$v_0$$ 生成，`weight_fifo` 把它们视为同一组，可以在前 $$k+1$$ 个训练步里陆续取走其中已经完成的部分，先完成的结果先进入训练，慢的留到最后。但 `in_order` 则每步只认自己绑定的那一批，这 $$k+1$$ 个训练步依然需要严格对应。
+我们可以发现，`in_order` 与 `weight_fifo` 二者其实殊途同归。稳定后每个训练批次恰好对应一个权重版本，两者行为完全重合：`weight_fifo` 下需要等待的那个最老的权重版本的批次，正好就是 `in_order` 下绑定给当前训练步的批次。事实上，二者的差别只在预热阶段：假设 `in_order` 下的 `max_lookahead_versions` 等于 $$\eta$$，那么最初的 $$\eta + 1$$ 批 prompt 都由 $$v_0$$ 生成，`weight_fifo` 把它们视为同一组，可以在前 $$\eta+1$$ 个训练步里陆续取走其中已经完成的部分，先完成的结果先进入训练，慢的留到最后。但 `in_order` 则每步只认自己绑定的那一批，这 $$\eta+1$$ 个训练步依然需要严格对应。
 
 **分析：** NeMo-RL 提供了三种严格保证 staleness 上限的做法，其中 `windowed` 靠 L2 取消和 L3 过滤来丢弃超限数据，而 `weight_fifo` 和 `in_order` 则都不丢弃，而是靠同一套批次绑定外加等待的机制。值得注意的是，`weight_fifo` 和 `in_order` 的慢请求会让训练等待，但等待的是指定的整个训练批次，这与 verl 的 `wait` 只等待生成完成、完成结果仍可能留到后续训练有所不同，因此可以保证严格 staleness 控制。此外，与上述三种做法不同，NeMo-RL 的 `ready_first` 则只有 L1 的工作量限制，无法保证每条 trajectory 的 staleness 上限。
 
