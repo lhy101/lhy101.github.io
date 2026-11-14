@@ -8,7 +8,7 @@ series: "PSRL / 01"
 permalink: "/blog/async-rl-staleness-1/"
 redirect_from: ["/blog/async-rl-staleness/"]
 list_order: 1
-cover: "/assets/blog/async-rl-staleness/cover.webp?v=44b27205b1d2"
+cover: "/assets/blog/async-rl-staleness-1/cover.webp?v=44b27205b1d2"
 cover_alt: "10 个异步 RL 框架的 L1、L2、L3 控制机制与严格 staleness 控制对比"
 cover_width: 2368
 cover_height: 1690
@@ -38,7 +38,7 @@ RL 的一条轨迹（trajectory）通常从一个 prompt 开始。Prompt 是模�
 对于 GRPO，同一个 prompt 通常会生成多条 trajectory，组成一个 **group**。训练侧从 queue/buffer 中选出 trajectory group，这个动作称为**训练取样**。选出的内容由 batch assembler 组装成一个 **batch**，也就是本轮一起参与训练的内容。
 
 在异步 RL 中，rollout 端和 training 端可以同时处理不同的 trajectory。rollout 端继续生成时，training 端也在用之前收集的 batch 训练。因此，一条 trajectory 从开始生成到训练取样，可能经历多次策略版本更新。要准确描述它的 staleness，需要区分三个阶段：开始生成、生成完成后等待训练取样，以及被选入 batch 并参与训练。对于采用 **partial rollout**（允许一条 trajectory 使用多个版本拼接生成）的系统，还需要进一步区分同一条 trajectory 中不同 token 的生成版本。
-![一条 partial rollout trajectory 在 v₁ 和 v₂ 生成，等待完整的一次版本更新，再以 v₃ 参与训练]({{ '/assets/blog/async-rl-staleness/staleness-origin.svg' | relative_url }})
+![一条 partial rollout trajectory 在 v₁ 和 v₂ 生成，等待完整的一次版本更新，再以 v₃ 参与训练]({{ '/assets/blog/async-rl-staleness-1/staleness-origin.svg' | relative_url }})
 
 上图展示了一条 trajectory 的生命周期。它在模型版本 $$v_1$$ 时准入并开始生成。生成期间，训练侧完成一轮更新，得到 $$v_2$$，并将新权重同步到 rollout 端。这条 trajectory 采用了 partial rollout：保留已经生成的前缀，再使用 $$v_2$$ 继续生成剩余部分。因此，同一条 trajectory 中可能包含由 $$v_1$$ 和 $$v_2$$ 分别生成的 token。
 
@@ -70,7 +70,7 @@ $$
 
 沿着 trajectory 的生命周期，我们观察到，系统其实可以在三个环节介入，来控制 staleness：（$$1$$）生成开始前，决定是否准入。（$$2$$）生成过程中，决定是否继续生成。（$$3$$）生成完成后，决定结果能否进入训练 batch。不同框架的实现方式有所不同，但都可以归入这三个环节。下文分别将它们称为 L1、L2 和 L3。
 
-![异步 RL 流水线上的 L1 准入控制、L2 Rollout 运行时控制和 L3 Training 前过滤]({{ '/assets/blog/async-rl-staleness/three-layer-control.svg' | relative_url }})
+![异步 RL 流水线上的 L1 准入控制、L2 Rollout 运行时控制和 L3 Training 前过滤]({{ '/assets/blog/async-rl-staleness-1/three-layer-control.svg' | relative_url }})
 
 #### L1：准入控制（Admission Control）
 
@@ -100,7 +100,7 @@ prompt 还没开始生成时，系统要先决定是否准入。通过准入控�
 
 下图汇总了 $$10$$ 个框架的做法：L1–L3 三列用勾/叉表示该框架是否在对应层级采取了控制动作。最后一列则回答我们最终关心的问题：能否保证所有训练 token 都不超限？
 
-![10 个系统的三层控制与严格 staleness 控制，具体配置见下文]({{ '/assets/blog/async-rl-staleness/systems-layer-map.svg' | relative_url }})
+![10 个系统的三层控制与严格 staleness 控制，具体配置见下文]({{ '/assets/blog/async-rl-staleness-1/systems-layer-map.svg' | relative_url }})
 
 下面是每个框架的具体分析。
 

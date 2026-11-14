@@ -84,7 +84,7 @@ python scripts/import-staleness-blog.py 'C:\Users\lihaoyang\Desktop\workspace\bl
 
 只导入（一）、（二）、（三）时，分别使用 `--article async-rl-staleness`、`--article simrl-staleness`、`--article psrl-staleness`。
 
-系列的统一地址为 `/blog/async-rl-staleness-1/`、`/blog/async-rl-staleness-2/`、`/blog/async-rl-staleness-3/`。原来的三个地址通过 `redirect_from` 自动跳转，文章文件名和资源目录保持不变。
+系列的统一地址为 `/blog/async-rl-staleness-1/`、`/blog/async-rl-staleness-2/`、`/blog/async-rl-staleness-3/`。原来的三个文章地址通过 `redirect_from` 自动跳转。对应资源目录为 `assets/blog/async-rl-staleness-1/`、`assets/blog/async-rl-staleness-2/`、`assets/blog/async-rl-staleness-3/`，封面、正文配图和动画统一使用相同的编号。
 
 （二）保存在 `_blog/simrl-staleness.md`。列表封面来自 blog 工作区的 `throughput-cover.svg`，节选正文端到端柱状图的前 3 档 staleness 上限，保留全部 14 个配置。封面不带脚注，仅复制发布版 SVG，尺寸为 3200 × 1920。
 

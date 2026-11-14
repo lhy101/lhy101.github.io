@@ -8,7 +8,7 @@ series: "PSRL / 03"
 permalink: "/blog/async-rl-staleness-3/"
 redirect_from: ["/blog/psrl-staleness/"]
 list_order: 3
-cover: "/assets/blog/psrl-staleness/cover.svg?v=60fbd48e7a9b"
+cover: "/assets/blog/async-rl-staleness-3/cover.svg?v=60fbd48e7a9b"
 cover_alt: "Reserve–Occupy 协议：生成前预留合法位置，完成后尽早放置，并共同满足版本上限"
 cover_width: 1280
 cover_height: 720
@@ -25,7 +25,7 @@ author_profile: false
 
 在系列博客的第二篇中，我们通过定量的实验，发现这种浪费会显著降低端到端的有效吞吐，并且还会导致数据分布系统性地偏向保留更短的序列，这并不是我们希望看到的。
 
-[![L3 丢弃与 L3 等待：计算浪费、数据偏置与训练停等]({{ '/assets/blog/psrl-staleness/l3-discard-vs-wait.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/l3-discard-vs-wait.png' | relative_url }})
+[![L3 丢弃与 L3 等待：计算浪费、数据偏置与训练停等]({{ '/assets/blog/async-rl-staleness-3/l3-discard-vs-wait.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-3/l3-discard-vs-wait.png' | relative_url }})
 
 而与大多数做法不同的是，NeMo-RL 的 `weight_fifo` 以及 `in_order` 选择了另一条路线：既然不想等到最后才发现数据太旧，那就在数据开始生成之前，就提前安排好它要参加哪一轮训练。正常按序执行时，数据按约定的轮次取用，不必等到完成后再因为版本太旧而被淘汰。但这个办法也有不够灵活的地方：假如当前 batch 就差一条长尾，后面 batch 的几条数据却早已完成，由于目标轮次已经绑定，我们不能拿后面的结果立刻补上当前这个空缺。因此，训练不得不停等，造成性能受损。
 
@@ -65,7 +65,7 @@ $$
 
 这个不等式给出了数据最晚能放置的那个 buffer。例如 $$v_{\text{traj}}=0$$、$$\eta=1$$，这条数据可以进入 Buffer $$v_0$$ 或 Buffer $$v_1$$，却不能再被安排到 Buffer $$v_2$$。Buffer $$v_2$$ 即使完全空着，对它来说也已经太晚了。
 
-![把 staleness 控制转化为放置问题：每条数据的最终 buffer 必须满足版本上限]({{ '/assets/blog/psrl-staleness/staleness-buffer-concept.svg' | relative_url }})
+![把 staleness 控制转化为放置问题：每条数据的最终 buffer 必须满足版本上限]({{ '/assets/blog/async-rl-staleness-3/staleness-buffer-concept.svg' | relative_url }})
 
 图里的数据 X 来自 $$v_0$$，放进 Buffer $$v_1$$ 时满足 $$1\leq 0+1$$。如果继续往后放进 Buffer $$v_2$$，就会违反 staleness 上限。
 
@@ -85,7 +85,7 @@ $$
 
 有了这 $$3$$ 种状态，L1 准入检查就很好理解了：**看看现在还能不能为这条 trajectory 做一次 *Reserve*。** 我们扫描尚未取用、满足 $$v_{\text{buffer}}\leq v_{\text{traj}}+\eta$$ 的 buffer，检查其中是否还有 *Empty* 槽位。有的话，就先把这个空槽变成这条 trajectory 的 *Reserved*，再开始生成。没有的话，就无法保证新准入的 trajectory 生成完毕后还有合法位置放置，因此必须暂缓准入。
 
-![L1 准入：四条 trajectory 依次 Reserve，准入时获得版本并开始生成，两个合法 buffer 满后 E 暂缓准入]({{ '/assets/blog/psrl-staleness/reserve-admission.gif?v=20261031-admission-v3' | relative_url }})
+![L1 准入：四条 trajectory 依次 Reserve，准入时获得版本并开始生成，两个合法 buffer 满后 E 暂缓准入]({{ '/assets/blog/async-rl-staleness-3/reserve-admission.gif?v=20261031-admission-v3' | relative_url }})
 
 *Reserved* 虽然还没有实际数据，但也不能再算成空槽，因为它已经为一条在途 trajectory 留好了位置。多个 trajectory 同时准入时，也必须以成功预留为准，不能因为各自都看到过空位，就一起开始生成。这样，每条成功准入的 trajectory 才确实有一个合法位置可去。
 
@@ -99,7 +99,7 @@ $$
 
 来看一个小例子。每个 buffer 有 $$4$$ 个槽位，A–F 都由 $$v_0$$ 生成，$$\eta=1$$，初始从后到前依次 *Reserve*。假设 B 最先完成，它原本预留在 Buffer $$v_1$$ 的第 $$3$$ 个槽位。按原地 *Occupy* 的做法，我们只需把这个槽位从 *Reserved* 变为 *Occupied* 就可以了，其他位置完全不用动。
 
-![原地 Occupy：直接使用预留位置]({{ '/assets/blog/psrl-staleness/occupy-in-place.gif' | relative_url }})
+![原地 Occupy：直接使用预留位置]({{ '/assets/blog/async-rl-staleness-3/occupy-in-place.gif' | relative_url }})
 
 这样的做法当然满足 staleness 约束，但也有些可惜：B 明明已经完成，前面的 Buffer $$v_0$$ 也有空槽，它却只能留在后面的 Buffer $$v_1$$，等到下一轮才参与训练。
 
@@ -123,7 +123,7 @@ $$
 2. 从前往后扫描 *Reserved*，找到第一个能合法移入这个空位的 F。把 F 的预留移到 B 刚刚释放的 Buffer $$v_1$$ 第 $$3$$ 个槽位。
 3. 为 B 寻找最早的合法 *Empty* 槽位。Buffer $$v_0$$ 第 $$1$$ 个槽位就是最早的空槽位，因此 B 直接落在那里。
 
-![按最早位置 Occupy：其余预留位置填充空位]({{ '/assets/blog/psrl-staleness/reserved-repacking.gif' | relative_url }})
+![按最早位置 Occupy：其余预留位置填充空位]({{ '/assets/blog/async-rl-staleness-3/reserved-repacking.gif' | relative_url }})
 
 和之前原地 *Occupy* 的流程相比，B 从后面的 buffer 提前到了前面的 buffer，F 则接替了 B 原先的预留位置。
 
@@ -143,7 +143,7 @@ $$
 
 这就是“按最差情况 *Reserve*，按最好情况 *Occupy*”：**生成前先留好合法位置，完成后再根据当前排布尽量往前放。** 如果没有更早的空槽，最差也可以使用本次操作前仍有效的预留位置。这样，我们既保住了每条 trajectory 的 staleness 上限，又为前面的 batch 提前攒齐创造了条件。
 
-![Reserve 按最差情况预留，Occupy 按当前情况尽早放置，两者共享同一条上限]({{ '/assets/blog/psrl-staleness/protocol-lifecycle.svg' | relative_url }})
+![Reserve 按最差情况预留，Occupy 按当前情况尽早放置，两者共享同一条上限]({{ '/assets/blog/async-rl-staleness-3/protocol-lifecycle.svg' | relative_url }})
 
 ### 4. Buffer 状态
 
@@ -153,7 +153,7 @@ $$
 - *STUCK*：空槽已经用完，且其中存在 *Reserved* 槽位，要等新的 trajectory 完成。
 - *READY*：整个 buffer 都是 *Occupied*，数据已凑齐。
 
-![PENDING、STUCK、READY：有空槽、满但未齐、整批已齐]({{ '/assets/blog/psrl-staleness/buffer-states-feedback.svg' | relative_url }})
+![PENDING、STUCK、READY：有空槽、满但未齐、整批已齐]({{ '/assets/blog/async-rl-staleness-3/buffer-states-feedback.svg' | relative_url }})
 
 如果当前版本的 buffer 已经 *READY*，而且训练端空闲，就可以**取出 buffer 对应的数据开始训练**。例如，取出 Buffer $$v_0$$ 的数据后，训练端开始 $$v_0\rightarrow v_1$$ 的模型训练与更新。而只有更新完成并发布 $$v_1$$ 后，新的 trajectory 才能使用这版模型继续生成。在 $$\eta=1$$ 时，这些新 trajectory 可以预留的位置也就随之扩展到了 Buffer $$v_2$$，从而允许生成端继续推进。
 
@@ -169,7 +169,7 @@ $$
 
 下面，我们来看一下完整的端到端演示，一共跑了 $$3$$ 个批次：
 
-<iframe class="protocol-player" src="{{ '/assets/blog/psrl-staleness/animation/index.html?embed=1&v=20261031-clock' | relative_url }}" title="Reserve-Occupy 协议可交互动画" loading="lazy" width="100%" height="800" frameborder="0" allowfullscreen></iframe>
+<iframe class="protocol-player" src="{{ '/assets/blog/async-rl-staleness-3/animation/index.html?embed=1&v=20261031-clock' | relative_url }}" title="Reserve-Occupy 协议可交互动画" loading="lazy" width="100%" height="800" frameborder="0" allowfullscreen></iframe>
 
 
 左侧每行是一条 trajectory，进度条总长度与这条 trajectory 从准入到完成的用时成比例。$$v_{\text{traj}}$$ 为准入时赋予 trajectory 的版本编号。右侧是 $$3$$ 个用于训练的 staleness buffer。演示动画中的移动是为了把因果关系画清楚，协议本身的 *Reserve* 和 *Occupy* 都是瞬间完成的。
@@ -183,7 +183,7 @@ $$
 
 初始权重为 $$v_0$$，$$\eta=1$$，batch size 为 $$4$$，max concurrency 为 $$6$$。合法范围内共有 $$8$$ 个槽位，先准入 A–F，并在准入时为它们写入 $$v_{\text{traj}}=0$$。G–L 此时还没有版本，也还没有开始生成。
 
-![关键片段：初始一次准入 A–F]({{ '/assets/blog/psrl-staleness/clips/01-initial-admission.gif' | relative_url }})
+![关键片段：初始一次准入 A–F]({{ '/assets/blog/async-rl-staleness-3/clips/01-initial-admission.gif' | relative_url }})
 
 *Reserve* 按“合法范围内尽量靠后”的规则依次落位，A–D 先进入 Buffer $$v_1$$，E、F 再进入 Buffer $$v_0$$。$$6$$ 个并发名额已经用完，因此 G 暂时不能开始。
 
@@ -194,7 +194,7 @@ $$
 
 A 完成后先离开原来的 *Reserved*，F 补到释放的槽位，A 再放入当前最早的合法 *Empty*。A 变成 *Occupied* 后立即释放一个 rollout 并发名额，Buffer $$v_0$$ 仍有合法空槽，所以同一时刻准入 G，并发恢复到 $$6$$。
 
-![关键片段：A Occupy 后立即补入 G]({{ '/assets/blog/psrl-staleness/clips/02-first-occupy.gif' | relative_url }})
+![关键片段：A Occupy 后立即补入 G]({{ '/assets/blog/async-rl-staleness-3/clips/02-first-occupy.gif' | relative_url }})
 
 </details>
 
@@ -203,7 +203,7 @@ A 完成后先离开原来的 *Reserved*，F 补到释放的槽位，A 再放入
 
 D 完成后，G 的 *Reserved* 后移到释放的位置，D *Occupy* 到 Buffer $$v_0$$，H 随即准入。之后 C 完成，但合法范围内的 Buffer $$v_0$$ 和 Buffer $$v_1$$ 已占满 $$8$$ 个槽位，所以即使并发降到 $$5$$，I 也不能开始。Buffer $$v_2$$ 对当前 $$v_0$$ 版本仍然太晚。
 
-![关键片段：补入 H 后，合法 buffer 容量耗尽]({{ '/assets/blog/psrl-staleness/clips/05-occupy-then-admit.gif' | relative_url }})
+![关键片段：补入 H 后，合法 buffer 容量耗尽]({{ '/assets/blog/async-rl-staleness-3/clips/05-occupy-then-admit.gif' | relative_url }})
 
 </details>
 
@@ -212,7 +212,7 @@ D 完成后，G 的 *Reserved* 后移到释放的位置，D *Occupy* 到 Buffer 
 
 A、D、C、E 变成 *Occupied* 后，Buffer $$v_0$$ 变成 *READY*，训练端取走这 $$4$$ 条并开始 $$v_0\rightarrow v_1$$ 的更新。训练进行时，B、F、G、H 仍在生成，F、G 可以继续 *Occupy* 到 Buffer $$v_1$$。
 
-![关键片段：首批攒满并开始训练]({{ '/assets/blog/psrl-staleness/clips/03-first-consume-training.gif' | relative_url }})
+![关键片段：首批攒满并开始训练]({{ '/assets/blog/async-rl-staleness-3/clips/03-first-consume-training.gif' | relative_url }})
 
 更新结束前，Buffer $$v_1$$ 已没有可用槽位，Buffer $$v_2$$ 对 $$v_0$$ trajectory 也不合法，因此，为了保证 staleness 不超限，不会因为并发暂时下降就提前准入 I。
 
@@ -223,7 +223,7 @@ A、D、C、E 变成 *Occupied* 后，Buffer $$v_0$$ 变成 *READY*，训练端�
 
 $$v_0\rightarrow v_1$$ 完成后，新的 trajectory 可以使用 $$v_1$$，合法范围扩展到 Buffer $$v_2$$。H、B 仍在生成，刚好空出 $$4$$ 个并发名额，于是 I–L 同时准入，并获得 $$v_{\text{traj}}=1$$。
 
-![关键片段：H、B 接近完成，发布 $$v_1$$ 后准入 I–L]({{ '/assets/blog/psrl-staleness/clips/04-update-unlocks-buffer.gif' | relative_url }})
+![关键片段：H、B 接近完成，发布 $$v_1$$ 后准入 I–L]({{ '/assets/blog/async-rl-staleness-3/clips/04-update-unlocks-buffer.gif' | relative_url }})
 
 </details>
 
@@ -232,7 +232,7 @@ $$v_0\rightarrow v_1$$ 完成后，新的 trajectory 可以使用 $$v_1$$，合�
 
 J 完成时，Buffer $$v_1$$ 已没有空槽，H、B 的 *Reserved* 也不能后移到 $$v_2$$，因为版本差会变成 $$2$$。所以 J 只能在 Buffer $$v_2$$ 内整理，并 *Occupy* 当前最早的合法空槽，I 的预留顺势后移。
 
-![关键片段：J 无法挤进前一批，写入 Buffer $$v_2$$ 第 $$1$$ 个槽位]({{ '/assets/blog/psrl-staleness/clips/07-blocked-next-buffer.gif' | relative_url }})
+![关键片段：J 无法挤进前一批，写入 Buffer $$v_2$$ 第 $$1$$ 个槽位]({{ '/assets/blog/async-rl-staleness-3/clips/07-blocked-next-buffer.gif' | relative_url }})
 
 </details>
 
@@ -241,7 +241,7 @@ J 完成时，Buffer $$v_1$$ 已没有空槽，H、B 的 *Reserved* 也不能后
 
 H 完成后，Buffer $$v_1$$ 只差 B，Buffer $$v_2$$ 仍在等待 I。K 先完成并写入 $$v_2$$，B 在 K 之后、L 之前完成。B 的 *Occupy* 让 Buffer $$v_1$$ 变成 *READY*，训练端开始 $$v_1\rightarrow v_2$$，而 L 和 I 继续与训练并行生成。
 
-![关键片段：K 先完成，B 补齐开训，L 随后完成]({{ '/assets/blog/psrl-staleness/clips/06-b-long-tail.gif' | relative_url }})
+![关键片段：K 先完成，B 补齐开训，L 随后完成]({{ '/assets/blog/async-rl-staleness-3/clips/06-b-long-tail.gif' | relative_url }})
 
 I 最后完成后，Buffer $$v_2$$ 也变成 *READY*，等上一轮更新结束再开始下一批训练。可见，训练端在处理上一批时，下一批可以先达到 *READY* 状态。等更新结束后，已经准备好的 batch 会立即接上。
 
@@ -269,7 +269,7 @@ $$
 
 下面，我们用一个超时错误作为例子：当训练端开始等待 buffer 攒齐时，我们检查最近的 buffer，如果它处于 *STUCK* 状态，就可以开始计时。当等待时间超过阈值后，就清空该 buffer 中剩余的所有 *Reserved* 槽位。此时，如果后面的 buffer 中已经有 *Occupied* 的数据，可以直接将其前移，填补空位，尽快攒满 buffer。另一方面，由于空出了槽位，我们可以从数据集中准入新的数据进行生成，来弥补丢弃的数据。
 
-![Reserved Timeout：B、C 超时退出，D 前移补位，再准入 G、H 并建立新的 Reserved]({{ '/assets/blog/psrl-staleness/extensions/stuck-timeout-recovery.gif' | relative_url }})
+![Reserved Timeout：B、C 超时退出，D 前移补位，再准入 G、H 并建立新的 Reserved]({{ '/assets/blog/async-rl-staleness-3/extensions/stuck-timeout-recovery.gif' | relative_url }})
 
 #### 7.3. *Occupied* 槽位筛选
 
@@ -277,20 +277,20 @@ $$
 
 下面的例子中，C 完成后先写入 Buffer $$v_0$$，随后因为某些原因而被过滤。我们将 Buffer $$v_1$$ 中已处于 *Occupied* 状态的 D 前移补位，尚未完成的 E、F 仍保留为 *Reserved*。由于新的空槽位诞生，我们随后就可以准入新的数据 G 继续生成。
 
-![Occupied Filtering：C 完成后被过滤，D 前移补位，再准入 G 并建立新的 Reserved]({{ '/assets/blog/psrl-staleness/extensions/occupied-filter.gif' | relative_url }})
+![Occupied Filtering：C 完成后被过滤，D 前移补位，再准入 G 并建立新的 Reserved]({{ '/assets/blog/async-rl-staleness-3/extensions/occupied-filter.gif' | relative_url }})
 
 #### 7.4. GRPO Group
 
 在上面所有例子中，我们的 *Reserve* 以及 *Occupy* 都是以 trajectory 为粒度进行的。但在实际中，GRPO 这类算法通常会为一个 prompt 生成多个 trajectory，这样的 trajectory group 中的成员必须全部完成，才可以实际用于训练。在这种情况下，我们将推理和训练中同一 prompt 的一组 trajectory 视作一个基本单位，然后让 staleness buffer 中的一个槽位对应一整个 trajectory group：*Reserve* 为整个 group 留位置，而 *Occupy* 则需要等待全组成员和后处理都就绪后再执行。
 
 
-![GRPO group：成员完成后删除 Reserved，再 Occupy 最早合法槽位]({{ '/assets/blog/psrl-staleness/extensions/grpo-group.gif' | relative_url }})
+![GRPO group：成员完成后删除 Reserved，再 Occupy 最早合法槽位]({{ '/assets/blog/async-rl-staleness-3/extensions/grpo-group.gif' | relative_url }})
 
 #### 7.5. Group-level 过采样
 
 为了减少一个 group 内部的 trajectory 长尾带来的等待，可以为一个 group 同时生成超过所需数量（group size）的候选。只要凑齐 group size，就立刻提交已选成员，剩余候选直接丢弃，不再等待长尾候选生成完成。
 
-![Group-level redundancy：达到所需成员数后停止等待多余候选]({{ '/assets/blog/psrl-staleness/extensions/redundant-group.gif' | relative_url }})
+![Group-level redundancy：达到所需成员数后停止等待多余候选]({{ '/assets/blog/async-rl-staleness-3/extensions/redundant-group.gif' | relative_url }})
 
 
 #### 7.6. Batch-level 过采样
@@ -300,7 +300,7 @@ $$
 下面举一个具体的例子：batch 大小为 $$2$$，而 buffer 的槽位数为 $$3$$。此时，每个 buffer 攒够 $$2$$ 个 *Occupied* 就可以变成 *READY* 并组建 batch 进行训练，而分界线右侧的第 $$3$$ 个槽位则表示冗余的容量。开始时，$$v_0$$ 有 $$1$$ 个 *Occupied* 和 $$2$$ 个 *Reserved*，$$v_1$$ 有 $$2$$ 个 *Occupied* 和 $$1$$ 个 *Reserved*。最先完成的候选放入 $$v_0$$ 后，$$2$$ 个 batch 都达到目标数量，协议会判断剩余 $$2$$ 个 *Reserved* 产生的数据不可能再有合法的放置位置，因此会一起丢弃，不再参与训练（协议只需要在每次有 buffer 变为 *READY* 时进行一次判断即可）。
 
 
-![Batch-level redundancy：G3 完成并填入 $$v_0$$，两个 batch 均 READY，G1 和 G2 被 Abort]({{ '/assets/blog/psrl-staleness/extensions/redundant-batch.gif' | relative_url }})
+![Batch-level redundancy：G3 完成并填入 $$v_0$$，两个 batch 均 READY，G1 和 G2 被 Abort]({{ '/assets/blog/async-rl-staleness-3/extensions/redundant-batch.gif' | relative_url }})
 
 
 ## Part III：实验效果
@@ -315,7 +315,7 @@ $$
 
 我们使用来自 dapo-math-17k 真实训练过程的负载 trace，包含 $$1024$$ 个 prompt group、共 $$8192$$ 条 response。该负载的 prompt 长度上限设置为 $$1024$$ token，response 长度上限设置为 $$38912$$ token，具体分布如下。
 
-[![负载的 prompt 与 response 长度分布]({{ '/assets/blog/psrl-staleness/exp/length_histograms-blog.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/length_histograms-blog.png' | relative_url }})
+[![负载的 prompt 与 response 长度分布]({{ '/assets/blog/async-rl-staleness-3/exp/length_histograms-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-3/exp/length_histograms-blog.png' | relative_url }})
 
 ### 9. 正确性验证：协议是否全程不超过 staleness 上限
 
@@ -323,7 +323,7 @@ $$
 
 我们固定每个 rollout instance 的 max concurrency 为 $$40$$，然后分别设置 $$\eta\in\{0,1,2,3,4,5\}$$，每种设置运行 $$100$$ 个训练 batch。下图展示了实验结果：每个子图对应一个 $$\eta$$，每根柱子对应一个训练 batch，不同深浅的颜色表示这一批中不同 staleness 的 trajectory 数量。
 
-[![六种 staleness 上限对应的逐 batch 构成]({{ '/assets/blog/psrl-staleness/exp/staleness_composition_grid-blog.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/staleness_composition_grid-blog.png' | relative_url }})
+[![六种 staleness 上限对应的逐 batch 构成]({{ '/assets/blog/async-rl-staleness-3/exp/staleness_composition_grid-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-3/exp/staleness_composition_grid-blog.png' | relative_url }})
 
 从图中，我们可以看到，每根柱子的总高度始终为 $$128$$，说明每个训练 batch 都包含完整的 $$128$$ 条 trajectory。与此同时，各子图中实际出现的 staleness 都没有超过对应的 $$\eta$$。$$6$$ 种上限、每组 $$100$$ 个 batch，合计展示的 $$600$$ 个 batch 中都没有出现超限。
 
@@ -341,7 +341,7 @@ $$
 
 在得到的实验效果图中，我们用 Ours 表示我们这套 *Reserve*-*Occupy* 协议。**柱子的实色部分和顶部数值表示有效吞吐。** 上方两种阴影分别表示在 L2、L3 被丢弃的部分，这些部分不计入有效吞吐。绿色倍率则表示我们的协议相对于对应基线的有效吞吐加速比。
 
-[![有效吞吐与 L2、L3 丢弃开销]({{ '/assets/blog/psrl-staleness/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png?v=20261113-updated' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png?v=20261113-updated' | relative_url }})
+[![有效吞吐与 L2、L3 丢弃开销]({{ '/assets/blog/async-rl-staleness-3/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png?v=20261113-updated' | relative_url }})]({{ '/assets/blog/async-rl-staleness-3/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png?v=20261113-updated' | relative_url }})
 
 **首先，我们对比同样不依赖超限丢弃的 NeMo-RL `in_order` 和 `weight_fifo`。** 在三个测试点上，我们的有效吞吐分别为 $$1929$$、$$2007$$、$$2056$$ tokens/s，约为 `in_order` 的 $$1.11\text{–}1.14$$ 倍、`weight_fifo` 的 $$1.06\text{–}1.17$$ 倍。
 

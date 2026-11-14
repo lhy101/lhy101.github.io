@@ -43,7 +43,7 @@ def sha256(path):
 
 
 def asset_url(slug, relative):
-    return "{{ '/assets/blog/" + slug + '/' + relative + "' | relative_url }}"
+    return "{{ '/assets/blog/" + POSTS[slug]['url_slug'] + '/' + relative + "' | relative_url }}"
 
 
 def adapt_article(original, slug):
@@ -103,7 +103,7 @@ def import_post(source, slug):
     original_path = source/settings['source']
     original = original_path.read_text(encoding='utf-8')
     title = original.splitlines()[0].removeprefix('# ')
-    destination = ROOT/'assets/blog'/slug
+    destination = ROOT/'assets/blog'/settings['url_slug']
     destination.mkdir(parents=True, exist_ok=True)
     copied = {}
     figures = re.findall(r'!\[[^\]]*\]\((assets/[^)]+)\)', original)
@@ -138,7 +138,7 @@ def import_post(source, slug):
         'date': settings['date'], 'lang': 'zh-CN', 'series': settings['series'],
         'permalink': f'/blog/{settings["url_slug"]}/',
         'redirect_from': [f'/blog/{slug}/'], 'list_order': settings['list_order'],
-        'cover': f'/assets/blog/{slug}/{settings["cover"]}?v={sha256(destination/settings["cover"])[:12]}',
+        'cover': f'/assets/blog/{settings["url_slug"]}/{settings["cover"]}?v={sha256(destination/settings["cover"])[:12]}',
         'cover_alt': settings['cover_alt'], 'cover_width': width, 'cover_height': height,
         'author_profile': False,
     }

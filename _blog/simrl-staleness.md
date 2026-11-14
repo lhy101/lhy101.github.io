@@ -8,7 +8,7 @@ series: "PSRL / 02"
 permalink: "/blog/async-rl-staleness-2/"
 redirect_from: ["/blog/simrl-staleness/"]
 list_order: 2
-cover: "/assets/blog/simrl-staleness/cover.svg?v=427901ed109d"
+cover: "/assets/blog/async-rl-staleness-2/cover.svg?v=427901ed109d"
 cover_alt: "14 个框架配置在 staleness 上限 1、2、3 下的端到端有效吞吐对比"
 cover_width: 3200
 cover_height: 1920
@@ -43,7 +43,7 @@ SimRL 本身的设计将在后续博客中详细介绍，这里我们只用一�
 
 我们用一次真实的 verl `drop` 运行来检查模拟器的表现（先运行 verl，记录其真实输入输出长度的 trace，再使用模拟器运行该 trace）。下图比较了真实运行与模拟运行中 rollout 侧请求总数随时间的变化，而背景阴影则标出了训练阶段，其中斜纹部分是 PPO 所需的 log-prob 重算（`old_log_prob`），实色部分是梯度更新（`update_actor`）。
 
-[![真实 verl 运行与 SimRL 模拟对比]({{ '/assets/blog/simrl-staleness/verl_alignment-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/verl_alignment-blog.png' | relative_url }})
+[![真实 verl 运行与 SimRL 模拟对比]({{ '/assets/blog/async-rl-staleness-2/verl_alignment-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/verl_alignment-blog.png' | relative_url }})
 
 这组对照采用如下配置：verl 的 `max_off_policy_threshold` 与 `max_warmup_batches` 均设置为 $$1$$ 并采用 `drop` 配置。每个 batch 包含 $$32$$ 个 group，每个 group 包含 $$8$$ 个 trajectory，response 上限为 $$10240$$。从统计量看，模拟相对真实运行的总时长偏差为 $$+2.5\%$$，忙时平均在途请求数偏差为 $$-2.5\%$$，忙时平均 KV 占用偏差为 $$-5.9\%$$。这基本印证了通过 SimRL 的模拟，我们可以较为准确地反映真实系统的运行情况。
 
@@ -61,7 +61,7 @@ SimRL 本身的设计将在后续博客中详细介绍，这里我们只用一�
 
 负载的长度分布如下：
 
-[![dapo-math-17k 负载的 prompt 与 response 长度分布]({{ '/assets/blog/simrl-staleness/workload_lengths-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/workload_lengths-blog.png' | relative_url }})
+[![dapo-math-17k 负载的 prompt 与 response 长度分布]({{ '/assets/blog/async-rl-staleness-2/workload_lengths-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/workload_lengths-blog.png' | relative_url }})
 
 ### 4. 衡量指标
 
@@ -92,7 +92,7 @@ $$
 
 在进入实验之前，我们先回顾一下第一篇博客中各框架的控制位置和关键参数。下图最后一列给出了第一篇博客中基于源码进行理论分析后得出的结论，而本文则希望通过实验进一步校验这些机制的实际表现。
 
-[![各框架的控制位置、关键参数与严格 staleness 控制（理论分析）]({{ '/assets/blog/simrl-staleness/control-mechanisms-recall-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/control-mechanisms-recall-blog.png' | relative_url }})
+[![各框架的控制位置、关键参数与严格 staleness 控制（理论分析）]({{ '/assets/blog/async-rl-staleness-2/control-mechanisms-recall-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/control-mechanisms-recall-blog.png' | relative_url }})
 
 上表中，对于每个框架，我们用蓝色字体标记出了实验中核心调节的参数，其通常是整个框架中与 staleness 上限最直接相关的旋钮，也是用户在考虑 staleness 控制时会最优先使用到的参数。下文将这类参数统一记为 $$\eta$$，它表示对应配置的取值，是否等于实际 staleness 上限还要看具体机制。其余次要参数（会对 staleness 造成影响，但并不是主要控制旋钮）我们大多维持在框架的默认值（个别情况会在后文具体说明）。下面展示各框架的实验结果。
 
@@ -103,7 +103,7 @@ verl 有两个核心参数：`num_warmup_batches` 决定[启动时额外预取](
 
 **(1) `drop` 的实验结果**
 
-[![verl drop：准入与上限是两个参数]({{ '/assets/blog/simrl-staleness/sweep_verl_drop-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_verl_drop-blog.png' | relative_url }})
+[![verl drop：准入与上限是两个参数]({{ '/assets/blog/async-rl-staleness-2/sweep_verl_drop-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_verl_drop-blog.png' | relative_url }})
 
 **`drop` 在全部 $$25$$ 个点上都守住了上限。** 其中，warmup 为 $$1$$、阈值为 $$5$$ 时，实际最大 staleness 为 $$3$$。其余 $$24$$ 个点则恰好达到对应上限。可见，其具备严格控制 staleness 的能力。
 
@@ -111,7 +111,7 @@ verl 有两个核心参数：`num_warmup_batches` 决定[启动时额外预取](
 
 **(2) `wait` 的实验结果**
 
-[![verl wait：超限后只等待，不丢弃]({{ '/assets/blog/simrl-staleness/sweep_verl_wait-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_verl_wait-blog.png' | relative_url }})
+[![verl wait：超限后只等待，不丢弃]({{ '/assets/blog/async-rl-staleness-2/sweep_verl_wait-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_verl_wait-blog.png' | relative_url }})
 
 切换到 `wait` 后，尽管不会出现任何 waste，但其中 $$15$$ 个点的实际最大 staleness 均超过了预期的上限，并不具备严格控制 staleness 的能力。
 
@@ -123,11 +123,11 @@ verl 有两个核心参数：`num_warmup_batches` 决定[启动时额外预取](
 
 为了验证我们的分析，我们另外构造了一份负载：按输入顺序先安排一批快组，接着两批慢组（每个 group 的每条 response 都取 $$25000$$ 到 $$31000$$ token），后续批次则全部是快组。warmup 为 $$2$$ 或 $$3$$ 时，启动准入会将前面的多批数据放在同一个生成版本上，快组则让训练能够在慢组完成前继续推进。
 
-[![构造负载的 32 个输入批次长度分布，第 2、3 批全部为长 response，下方放大快批次]({{ '/assets/blog/simrl-staleness/slow_batch_lengths-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/slow_batch_lengths-blog.png' | relative_url }})
+[![构造负载的 32 个输入批次长度分布，第 2、3 批全部为长 response，下方放大快批次]({{ '/assets/blog/async-rl-staleness-2/slow_batch_lengths-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/slow_batch_lengths-blog.png' | relative_url }})
 
 可以看到，这份负载共有 $$32$$ 批，每批 $$128$$ 条 response。第 $$2$$、$$3$$ 批的所有 response 都较长，其余 response 则为 $$300$$ 到 $$700$$ token。实验结果如下：
 
-[![verl wait：整批慢组，十个点全部超限]({{ '/assets/blog/simrl-staleness/sweep_verl_wait_cohort-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_verl_wait_cohort-blog.png' | relative_url }})
+[![verl wait：整批慢组，十个点全部超限]({{ '/assets/blog/async-rl-staleness-2/sweep_verl_wait_cohort-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_verl_wait_cohort-blog.png' | relative_url }})
 
 在这份构造负载上，warmup 取 $$2$$ 和 $$3$$，阈值扫描 $$1$$ 到 $$5$$，**十个点全部超限**，其中包括阈值大于 warmup 的五个点。
 
@@ -185,7 +185,7 @@ $$
 
 固定 warmup 为 $$1$$，将两种策略按实际最大 staleness 对齐，相同时取扫描中最高的有效吞吐：
 
-[![warmup 为 1 时，drop 与 wait 在相同实际最大 staleness 下的有效吞吐，叉号表示本次扫描未达到该实际值]({{ '/assets/blog/simrl-staleness/verl_drop_wait_matched-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/verl_drop_wait_matched-blog.png' | relative_url }})
+[![warmup 为 1 时，drop 与 wait 在相同实际最大 staleness 下的有效吞吐，叉号表示本次扫描未达到该实际值]({{ '/assets/blog/async-rl-staleness-2/verl_drop_wait_matched-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/verl_drop_wait_matched-blog.png' | relative_url }})
 
 从图中我们可以看到，实际最大 staleness 为 $$1$$、$$2$$ 时，`wait` 的吞吐更高，分别约为 $$1825$$ 和 $$1864$$ tokens/s，`drop` 为 $$1436$$ 和 $$1816$$。为 $$3$$ 时两者持平，都是 $$1945$$。
 
@@ -196,7 +196,7 @@ $$
 <details markdown="1" class="framework-detail" id="framework-trl">
 <summary>TRL</summary>
 
-[![TRL：严格的 L3 丢弃]({{ '/assets/blog/simrl-staleness/sweep_trl-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_trl-blog.png' | relative_url }})
+[![TRL：严格的 L3 丢弃]({{ '/assets/blog/async-rl-staleness-2/sweep_trl-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_trl-blog.png' | relative_url }})
 
 TRL 的核心参数是 `max_staleness`，它在 L3 的 [`RolloutQueueDataset`](https://github.com/huggingface/trl/blob/9d76f2f8c0421fcf8a4a72113a9e226ce796e592/trl/experimental/async_grpo/async_grpo_trainer.py#L367-L372) 里直接和每条 trajectory 的版本差比较，超过就丢弃。此外，TRL 还有个参数 `max_inflight_tasks` 来控制 L1 准入的容量，我们保持其为默认值 `-1`。此时，系统会自动推导 L1 准入的容量，将其设定为 [`max(max_staleness, 1)`](https://github.com/huggingface/trl/blob/9d76f2f8c0421fcf8a4a72113a9e226ce796e592/trl/experimental/async_grpo/async_grpo_config.py#L121-L128)。
 
@@ -211,7 +211,7 @@ TRL 的核心参数是 `max_staleness`，它在 L3 的 [`RolloutQueueDataset`](h
 <details markdown="1" class="framework-detail" id="framework-areal">
 <summary>AReaL</summary>
 
-[![AReaL：只靠 L1 额度桶]({{ '/assets/blog/simrl-staleness/sweep_areal-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_areal-blog.png' | relative_url }})
+[![AReaL：只靠 L1 额度桶]({{ '/assets/blog/async-rl-staleness-2/sweep_areal-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_areal-blog.png' | relative_url }})
 
 AReaL 的核心参数是 `max_head_offpolicyness`。在它的 [`StalenessManager`](https://github.com/areal-project/AReaL/blob/6cad8710bb5740a5480f8fba3a5970dd08638d01/areal/infra/staleness_manager.py#L100-L113) 里，这个参数只用来调整准入额度。
 
@@ -224,7 +224,7 @@ AReaL 的核心参数是 `max_head_offpolicyness`。在它的 [`StalenessManager
 <details markdown="1" class="framework-detail" id="framework-skyrl">
 <summary>SkyRL</summary>
 
-[![SkyRL：配额加违规计数，不丢弃]({{ '/assets/blog/simrl-staleness/sweep_skyrl-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_skyrl-blog.png' | relative_url }})
+[![SkyRL：配额加违规计数，不丢弃]({{ '/assets/blog/async-rl-staleness-2/sweep_skyrl-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_skyrl-blog.png' | relative_url }})
 
 SkyRL 的核心参数 `max_staleness_steps` 沿用 AReaL 的额度思路，只多了一处：取样时有一个[超限告警和计数](https://github.com/NovaSky-AI/SkyRL/blob/38146ee9248eb61d884e7df7b44747d97a6fc381/skyrl/train/fully_async_trainer.py#L1037-L1070)。告警能够记录问题，却不会阻止超限数据进入训练。因此，SkyRL 的最终表现与 AReaL 基本一致（SkyRL 的 partial rollout 默认保留上个版本的 KV，不需要重新计算即可原地继续，因此系统开销略有区别）。
 
@@ -233,7 +233,7 @@ SkyRL 的核心参数 `max_staleness_steps` 沿用 AReaL 的额度思路，只�
 <details markdown="1" class="framework-detail" id="framework-openrlhf">
 <summary>OpenRLHF</summary>
 
-[![OpenRLHF：以 batch 为粒度的许可]({{ '/assets/blog/simrl-staleness/sweep_openrlhf-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_openrlhf-blog.png' | relative_url }})
+[![OpenRLHF：以 batch 为粒度的许可]({{ '/assets/blog/async-rl-staleness-2/sweep_openrlhf-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_openrlhf-blog.png' | relative_url }})
 
 OpenRLHF 的核心参数是 `async_queue_size`，可以理解为以 batch 为粒度的一组生成许可，训练侧[取走一批结果时才归还](https://github.com/OpenRLHF/OpenRLHF/blob/dc2a7ad326f619fc5a47737ea47d1920ce2c0b53/openrlhf/trainer/ppo_trainer_async.py#L227-L232)。
 
@@ -244,7 +244,7 @@ OpenRLHF 的核心参数是 `async_queue_size`，可以理解为以 batch 为粒
 <details markdown="1" class="framework-detail" id="framework-slime">
 <summary>slime</summary>
 
-[![slime：预取深度不是 staleness 上限]({{ '/assets/blog/simrl-staleness/sweep_slime-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_slime-blog.png' | relative_url }})
+[![slime：预取深度不是 staleness 上限]({{ '/assets/blog/async-rl-staleness-2/sweep_slime-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_slime-blog.png' | relative_url }})
 
 slime 的核心参数是 `fully_async_group_prefetch_factor`。L1 阈值由各引擎并发参数 `sglang_server_concurrency` 之和除以 `n_samples_per_prompt`，再乘以该预取系数[得到](https://github.com/THUDM/slime/blob/2f4280e3b0e6934b954db93153bd79d9c9312830/slime/rollout/fully_async_rollout.py#L62-L103)。
 
@@ -257,7 +257,7 @@ slime 的核心参数是 `fully_async_group_prefetch_factor`。L1 阈值由各�
 <details markdown="1" class="framework-detail" id="framework-roll">
 <summary>ROLL</summary>
 
-[![ROLL：一个参数贯穿 L1、L2、L3]({{ '/assets/blog/simrl-staleness/sweep_roll-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_roll-blog.png' | relative_url }})
+[![ROLL：一个参数贯穿 L1、L2、L3]({{ '/assets/blog/async-rl-staleness-2/sweep_roll-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_roll-blog.png' | relative_url }})
 
 ROLL 的核心参数 `async_generation_ratio` 同时决定 L1 的准入额度、L2 的[运行中取消](https://github.com/alibaba/ROLL/blob/d96d0cce56ec42c78c7b61e111b596a3a3a008a8/roll/distributed/scheduler/generate_scheduler.py#L568-L577)和 L3 的[取样范围](https://github.com/alibaba/ROLL/blob/d96d0cce56ec42c78c7b61e111b596a3a3a008a8/roll/distributed/scheduler/generate_scheduler.py#L351-L386)。可以看到六个配置均未超限，实际最大 staleness 从 $$0$$ 到 $$5$$，逐点等于参数值。
 
@@ -268,7 +268,7 @@ ROLL 的核心参数 `async_generation_ratio` 同时决定 L1 的准入额度、
 <details markdown="1" class="framework-detail" id="framework-prime-rl">
 <summary>prime-rl</summary>
 
-[![prime-rl：max_off_policy_steps 扫描，L2 取消与 L3 过滤下的吞吐和实际 staleness]({{ '/assets/blog/simrl-staleness/sweep_prime_rl-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_prime_rl-blog.png' | relative_url }})
+[![prime-rl：max_off_policy_steps 扫描，L2 取消与 L3 过滤下的吞吐和实际 staleness]({{ '/assets/blog/async-rl-staleness-2/sweep_prime_rl-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_prime_rl-blog.png' | relative_url }})
 
 prime-rl 的核心参数 `max_off_policy_steps` 同时用于 L2 和 L3。[min_fresh_version()](https://github.com/PrimeIntellect-ai/prime-rl/blob/d61df5690af1ccc2019c844403f8d2f2c5ed3273/src/prime_rl/orchestrator/utils.py#L41-L44) 根据该参数计算允许的最早生成版本：发布新权重时，系统据此取消仍在生成的 group。组装训练 batch 前，再用同一限制条件过滤待训练池。也就是说，调整这一个参数会同时影响 L2 与 L3 两层控制。
 
@@ -281,7 +281,7 @@ prime-rl 的核心参数 `max_off_policy_steps` 同时用于 L2 和 L3。[min_fr
 <details markdown="1" class="framework-detail" id="framework-dressage">
 <summary>Dressage</summary>
 
-[![Dressage：按末尾 token 版本过滤]({{ '/assets/blog/simrl-staleness/sweep_dressage-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_dressage-blog.png' | relative_url }})
+[![Dressage：按末尾 token 版本过滤]({{ '/assets/blog/async-rl-staleness-2/sweep_dressage-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_dressage-blog.png' | relative_url }})
 
 Dressage 的核心参数 `dressage_staleness_keep_versions` 决定 L3 保留多少种末尾版本。它按不同版本首次出现的顺序记录版本，并依据末尾 token 的生成版本过滤，详见[版本记录与过滤逻辑](https://github.com/Accio-Lab/Dressage/blob/3e3142fe8ea07e4504c3b20a936a4c201a3de44c/dressage/rollout/staleness.py#L32-L132)。因此，参数设为 $$2$$，并不代表所有 token 的 staleness 都不超过 $$2$$。
 
@@ -298,21 +298,21 @@ NeMo-RL 提供四种 sampler，详见[代码实现](https://github.com/NVIDIA-Ne
 
 本文在前三种模式中扫描 `max_staleness_versions`，在 `in_order` 中扫描 `max_lookahead_versions`。四种模式的 `max_inflight_prompts` 以及 `max_buffered_rollouts` 都固定为 $$96$$，为了确保扫描到 staleness 上限是 $$5$$ 的时候，可以预留出 $$16\times(5+1)=96$$ 个位置（参考[容量校验](https://github.com/NVIDIA-NeMo/RL/blob/726d5eb225a8ae21e14b6778e56abfab2d794513/nemo_rl/algorithms/single_controller_utils/config.py#L1375-L1384)）。
 
-[![NeMo-RL windowed：L2 取消加 L3 过滤]({{ '/assets/blog/simrl-staleness/sweep_nemo_windowed-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_nemo_windowed-blog.png' | relative_url }})
+[![NeMo-RL windowed：L2 取消加 L3 过滤]({{ '/assets/blog/async-rl-staleness-2/sweep_nemo_windowed-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_nemo_windowed-blog.png' | relative_url }})
 
 `windowed` 的 `max_staleness_versions` 同时用于 L2 和 L3，设计上限为参数本身。参数从 $$0$$ 放宽到 $$5$$，实际最大 staleness 依次为 $$0$$ 到 $$5$$，均未超限，waste 则分别为 $$16.4\%$$、$$24.0\%$$、$$30.1\%$$、$$27.6\%$$、$$23.5\%$$、$$13.2\%$$。waste 在参数 $$2$$ 处达到峰值，此后随窗口放宽而回落：窗口越宽，提前生成的数据越可能仍在窗口内被消费。
 
 `weight_fifo` 除了限制 L1 准入，还会控制训练前的版本：在所有尚未消费的 group 里（还在跑的也算）找最老的版本，只从这个版本取，凑不满一批就等。下面是它的实验结果：
 
-[![NeMo-RL weight_fifo：只等窗口内最旧的一版]({{ '/assets/blog/simrl-staleness/sweep_nemo_weight_fifo-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_nemo_weight_fifo-blog.png' | relative_url }})
+[![NeMo-RL weight_fifo：只等窗口内最旧的一版]({{ '/assets/blog/async-rl-staleness-2/sweep_nemo_weight_fifo-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_nemo_weight_fifo-blog.png' | relative_url }})
 
 图中所有点都未超限，实际最大 staleness 等于参数取值。参数为 $$1$$ 到 $$5$$ 时，有效吞吐依次为 $$1825$$、$$1748$$、$$1760$$、$$1764$$、$$1778$$ tokens/s。`weight_fifo` 之所以能守住上限，靠的是训练侧停等：设参数取值为 $$\eta$$，准入最多允许 $$\eta+1$$ 批在途，取样时只取最老的一批，凑不满就停下来等。每个训练版本消耗一批，最老的一批最多排在 $$\eta$$ 批之后，因此 staleness 不会超过 $$\eta$$。可见，它只停等，不丢弃数据。
 
-[![NeMo-RL ready_first：只有 L1 准入，不按版本过滤]({{ '/assets/blog/simrl-staleness/sweep_nemo_ready_first-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_nemo_ready_first-blog.png' | relative_url }})
+[![NeMo-RL ready_first：只有 L1 准入，不按版本过滤]({{ '/assets/blog/async-rl-staleness-2/sweep_nemo_ready_first-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_nemo_ready_first-blog.png' | relative_url }})
 
 另外两种 sampler 中，`ready_first` 仅限制 L1 准入，不按版本过滤。参数为 $$0$$ 时为同步，参数从 $$1$$ 到 $$5$$ 时，实际最大 staleness 依次为 $$3$$、$$4$$、$$6$$、$$6$$、$$8$$，五个点均超限，表现与 AReaL、SkyRL 类似。
 
-[![NeMo-RL in_order：准入时指定训练版本，不丢弃]({{ '/assets/blog/simrl-staleness/sweep_nemo_in_order-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/sweep_nemo_in_order-blog.png' | relative_url }})
+[![NeMo-RL in_order：准入时指定训练版本，不丢弃]({{ '/assets/blog/async-rl-staleness-2/sweep_nemo_in_order-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/sweep_nemo_in_order-blog.png' | relative_url }})
 
 `in_order` 则通过 `max_lookahead_versions` 在准入时为每批数据指定目标训练版本。准入游标允许 lookahead 个批次领先训练，因此 staleness 上限等于参数：参数从 $$0$$ 到 $$5$$，对应的上限也是 $$0$$ 到 $$5$$，且不会产生任何 waste。可见，提前安排训练轮次，确实可以在不丢弃数据的情况下控制 staleness。不过，固定训练轮次也意味着，当前 batch 尚未凑齐时，训练侧需要等待。从图中可以看到，参数 $$1$$ 到 $$5$$ 的有效吞吐依次为 $$1740$$、$$1771$$、$$1780$$、$$1744$$、$$1761$$ tokens/s，放宽参数并不会带来明显的吞吐提升。
 
@@ -328,7 +328,7 @@ NeMo-RL 提供四种 sampler，详见[代码实现](https://github.com/NVIDIA-Ne
 
 在前面的实验中，AReaL、SkyRL 与 NeMo-RL 的 `ready_first` 等都出现了超限，但实验结果图只给出了整次运行的宏观统计量。这里我们更进一步，逐训练 batch 统计超限出现的频率和覆盖面。下面以 AReaL 为例，取它最紧的异步设置 `max_head_offpolicyness=1`。
 
-[![仅 L1 准入时，每个训练 batch 的 staleness 构成]({{ '/assets/blog/simrl-staleness/l1_violations-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/l1_violations-blog.png' | relative_url }})
+[![仅 L1 准入时，每个训练 batch 的 staleness 构成]({{ '/assets/blog/async-rl-staleness-2/l1_violations-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/l1_violations-blog.png' | relative_url }})
 
 图中，每根柱子对应一个训练 batch，按 staleness 分层，斜线阴影标出超过参数值的 trajectory。我们不难发现，**超限并非少数离群值**：$$50$$ 个 batch 中有 $$46$$ 个至少含一条超限 trajectory，$$6400$$ 条 trajectory 中累计 $$1280$$ 条超限。只有 $$4$$ 个 batch 完全没有超限。超限的 trajectory 中，$$1136$$ 条的 staleness 为 $$2$$，$$144$$ 条为 $$3$$。每个 batch 始终包含 $$128$$ 条 trajectory，这些超限数据并没有被过滤，全部实际参与了训练。因此，仅靠 L1 数量限制时，超限会持续出现在整个训练过程中，而非长尾导致的偶发现象。可以预见，这会对 RL 训练产生不可忽视且持续的影响。
 
@@ -338,11 +338,11 @@ NeMo-RL 提供四种 sampler，详见[代码实现](https://github.com/NVIDIA-Ne
 
 为了了解这一变化，我们统计了每条 trajectory 的抢占次数和重新 prefill 量。参数从 $$1$$ 增加到 $$2$$ 时，AReaL 的平均抢占次数从 $$0.34$$ 跳到 $$4.64$$，之后在约 $$6$$ 次附近变化。重新 prefill 量则继续上升，AReaL 从每条 $$5268$$ token 增至 $$18094$$，SkyRL 从 $$1744$$ 增至 $$9417$$。这意味着更多请求同时驻留会加大 KV 压力，被抢占的请求恢复时需要重算上下文，抵消并发带来的收益。
 
-[![AReaL 与 SkyRL 随参数加深的抢占次数与重新 prefill 量]({{ '/assets/blog/simrl-staleness/preempt_reprefill-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/preempt_reprefill-blog.png' | relative_url }})
+[![AReaL 与 SkyRL 随参数加深的抢占次数与重新 prefill 量]({{ '/assets/blog/async-rl-staleness-2/preempt_reprefill-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/preempt_reprefill-blog.png' | relative_url }})
 
 **准入和 staleness 阈值是否可以独立调整，也会影响结果。** verl `drop` 分别使用 `num_warmup_batches` 与 `max_off_policy_threshold` 两个参数来调节准入与 staleness 阈值，TRL 则由一个 `max_staleness` 同时决定。下图在相同的预期 staleness 上限下比较两者：TRL 的 `max_staleness` 就是预期上限，verl 的阈值 $$\eta$$ 对应预期上限 $$\eta-1$$。我们在同一 staleness 上限下，对比二者的有效吞吐以及 waste 占比。
 
-[![相同预期上限下，TRL 与 verl drop 的有效吞吐和 waste]({{ '/assets/blog/simrl-staleness/trl_verl_matched-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/trl_verl_matched-blog.png' | relative_url }})
+[![相同预期上限下，TRL 与 verl drop 的有效吞吐和 waste]({{ '/assets/blog/async-rl-staleness-2/trl_verl_matched-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/trl_verl_matched-blog.png' | relative_url }})
 
 从图中我们可以看到，预期上限为 $$0$$、$$1$$ 时，TRL 的有效吞吐较高，分别为 $$880$$ 和 $$1612$$ tokens/s，verl 为 $$838$$ 和 $$1436$$。为 $$2$$、$$3$$、$$4$$、$$5$$ 时，verl 较高，分别为 $$1816$$、$$1945$$、$$1945$$、$$1951$$，TRL 为 $$1513$$、$$1511$$、$$1563$$、$$1592$$。verl 在预期上限为 $$4$$、$$5$$ 时实际都只达到 staleness $$3$$，因此吞吐在 $$3$$ 之后基本走平，waste 维持为 $$0$$，而 TRL 则一路升到上限 $$5$$。这是因为 verl 可以独立限制预取量，将其控制在较低值，从而减少 waste。反观 TRL，其预取量也随 staleness 增大而膨胀，因此相应的 waste 在已测范围内无法降到零。
 
@@ -350,7 +350,7 @@ NeMo-RL 提供四种 sampler，详见[代码实现](https://github.com/NVIDIA-Ne
 
 为了进一步分析 L2 取消与 L3 过滤的作用，我们额外拼接了一个消融配置：L1 采用 AReaL 的额度桶，L2 采用 ROLL 的运行时取消，L3 采用 verl `drop` 的训练前过滤。L1-L3 三层共用同一个参数 $$\eta$$：L1 的准入上限由 $$\eta$$ 控制。L2 在每次发布新权重时，取消版本差已经超过 $$\eta$$、且仍在生成的 group。L3 则在训练前过滤掉版本差超过 $$\eta$$ 的数据。下图展示了逐级叠加 L1-L3 的结果对比。
 
-[![同一准入下逐级叠加 L3 与 L2：吞吐、丢弃来源与实际 staleness]({{ '/assets/blog/simrl-staleness/ladder_l2_l3-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/ladder_l2_l3-blog.png' | relative_url }})
+[![同一准入下逐级叠加 L3 与 L2：吞吐、丢弃来源与实际 staleness]({{ '/assets/blog/async-rl-staleness-2/ladder_l2_l3-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/ladder_l2_l3-blog.png' | relative_url }})
 
 **L1：** 参数 $$\eta$$ 从 $$1$$ 增至 $$5$$，实际最大 staleness 分别为 $$3$$、$$4$$、$$6$$、$$6$$、$$8$$，均超过 $$\eta$$。
 
@@ -370,7 +370,7 @@ NeMo-RL 提供四种 sampler，详见[代码实现](https://github.com/NVIDIA-Ne
 
 为检验这一机制，我们进一步引入 Dressage 作为对照：Dressage 依据末尾 token 的生成版本过滤，而不是直接检查整条 trajectory 已跨过多少训练版本。如果上述解释成立，那么按整条 trajectory 的 staleness 丢弃的常规方案应表现出更明显的长度偏向，而 Dressage 的这种偏向应较弱。
 
-[![被丢弃的 trajectory 的长度分布，以及各框架最长 10% 中被丢弃的占比]({{ '/assets/blog/simrl-staleness/length_bias-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/length_bias-blog.png' | relative_url }})
+[![被丢弃的 trajectory 的长度分布，以及各框架最长 10% 中被丢弃的占比]({{ '/assets/blog/async-rl-staleness-2/length_bias-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/length_bias-blog.png' | relative_url }})
 
 左图以 verl `drop`、`max_off_policy_threshold=1`、`num_warmup_batches=4` 为例：实色柱表示进入训练的 $$1280$$ 条 trajectory，阴影柱表示被丢弃的 $$4512$$ 条，两条虚线标出各自均长。可以看到，被丢弃集合的均值更高，在 $$20000$$ token 以后仍有明显长尾。相比之下，实际进入训练的集合在该区间已经很少。
 
@@ -403,13 +403,13 @@ Dressage 作为对照，表现出明显更弱的长度偏向。参数为 $$1$$ �
 
 > **说明**：跨权重更新时（partial rollout 时），部分框架会保留旧 token 对应的 KV cache。按本文引用的版本，SkyRL 的 fully-async 路径和 prime-rl 默认会保留旧 KV，避免权重更新引起的 prefix 重算，这会一定程度上增大其吞吐。
 
-[![各框架在相同 staleness 上限参数下的最高有效吞吐]({{ '/assets/blog/simrl-staleness/matched_throughput-blog.png' | relative_url }})]({{ '/assets/blog/simrl-staleness/matched_throughput-blog.png' | relative_url }})
+[![各框架在相同 staleness 上限参数下的最高有效吞吐]({{ '/assets/blog/async-rl-staleness-2/matched_throughput-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/matched_throughput-blog.png' | relative_url }})
 
 从图中我们可以发现，$$14$$ 个配置中有 $$11$$ 个从参数 $$\eta=3$$ 起不再变化，除了 SkyRL、ROLL 和 NeMo-RL `windowed`：SkyRL 在 $$\eta=4$$ 时还有一次提升，ROLL 和 NeMo-RL `windowed` 则继续上升到 $$\eta=5$$。也就是说，**在当前负载、资源配比及扫描范围内，多数配置在 staleness 上限参数 $$\eta$$ 达到 $$2$$ 或 $$3$$ 后，已经无法通过继续增大参数获得更高吞吐。**
 
 首先，我们可以发现，当 staleness 上限较小时，在严格的 staleness 约束下，部分框架甚至没有可用配置（我们不考虑彻底同步的配置）。如果算法侧只能容忍很紧的 staleness，例如要求实际最大 staleness 不超过 $$1$$ 或 $$2$$，那么此时，就基本只能选择那些具有严格 staleness 控制的框架。例如，如果要求 $$\eta=1$$，那么 AReaL、SkyRL、slime、OpenRLHF、Dressage 以及 NeMo-RL `ready_first` 均无法使用，因为其最小实际 staleness 是 $$3$$。能采用的是 verl `drop`、verl `wait`、TRL、ROLL、prime-rl，以及 NeMo-RL 的 `windowed`、`in_order` 和 `weight_fifo`。在这些框架中，我们不难发现，不涉及 L3 丢弃的 NeMo-RL `in_order` 和 `weight_fifo` 很有竞争力：$$\eta=1$$ 时 `weight_fifo` 为 $$1826$$、`in_order` 为 $$1744$$，都高于同样具有严格 staleness 控制的 TRL（$$1612$$）、ROLL（$$1512$$）、NeMo-RL `windowed`（$$1465$$）、verl `drop`（$$1438$$）和 prime-rl（$$1405$$）。而 $$\eta=2$$ 时 NeMo-RL 的 `weight_fifo` 为 $$1826$$、`in_order` 为 $$1777$$，与 verl `drop` 的 $$1824$$ 基本持平，并且同样优于其余严格控制 staleness 的方案。**可见，在严格容忍度下，用等待换不丢弃并没有牺牲吞吐，反而往往比在 L1 准入时不加考虑、全部交给 L3 丢弃效果更好。**
 
-其次，若算法侧对 staleness 容忍度较高，infra 选型的重点便转向上限放宽后的绝对系统吞吐。此时领先的是 SkyRL（$$2053$$ tokens/s），slime 与 Dressage 紧随其后（都是 $$2012$$），再往下是 AReaL（$$1959$$）以及 verl 与 OpenRLHF（$$1951$$）。而 TRL、ROLL 和 NeMo-RL `windowed` 等其余方法则明显落后。我们发现，影响吞吐的一个重要因素，是框架能否把 **L1 容量参数和 staleness 上限参数解耦**。Dressage 的 `max_active_groups`、OpenRLHF 的 `async_queue_size`、slime 的 `group_prefetch_factor`、verl 的 `num_warmup_batches` 都可以单独设置，与控制 staleness 上限的参数互不干扰。因此，这些框架可以在放宽 staleness 上限的同时把准入保持在较小额度，避免 KV 压满。如果框架采用 L3 丢弃（例如 verl `drop`），其甚至能让框架在高 staleness 上限下彻底避免 L3 丢弃。而 TRL 和 ROLL 则是一个参数同时决定准入容量和 staleness 上限，放宽 staleness 上限就顺带增加在途 trajectory 数目，导致更多的抢占、重新 prefill 以及 L3 丢弃，使得吞吐受损。
+其次，若算法侧对 staleness 容忍度较高，infra 选型的重点便转向上限放宽后的绝对系统吞吐。此时领先的是 SkyRL（$$2053$$ tokens/s），slime 与 Dressage 紧随其后（都是 $$2012$$），再往下是 AReaL（$$1959$$）以及 verl 与 OpenRLHF（$$1951$$）。而 TRL、ROLL 和 NeMo-RL `windowed` 等其余方法则明显落后。我们发现，影响吞吐的一个重要因素，是框架能否把 **L1 容量参数和 staleness 上限参数解耦**。Dressage 的 `max_active_groups`、OpenRLHF 的 `async_queue_size`、slime 的 `fully_async_group_prefetch_factor`、verl 的 `num_warmup_batches` 都可以单独设置，与控制 staleness 上限的参数互不干扰。因此，这些框架可以在放宽 staleness 上限的同时把准入保持在较小额度，避免 KV 压满。如果框架采用 L3 丢弃（例如 verl `drop`），其甚至能让框架在高 staleness 上限下彻底避免 L3 丢弃。而 TRL 和 ROLL 则是一个参数同时决定准入容量和 staleness 上限，放宽 staleness 上限就顺带增加在途 trajectory 数目，导致更多的抢占、重新 prefill 以及 L3 丢弃，使得吞吐受损。
 
 ## Part IV：小结
 

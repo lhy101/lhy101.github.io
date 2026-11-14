@@ -19,13 +19,17 @@ def main():
         imported = (ROOT/f'_blog/{slug}.md').read_text(encoding='utf-8')
         _, metadata, body = imported.split('---\n', 2)
         assert body.removeprefix('\n') == adapt_article(original, slug), slug+' body parity'
-        destination = ROOT/'assets/blog'/slug
+        asset_slug = settings['url_slug']
+        destination = ROOT/'assets/blog'/asset_slug
         manifest = json.loads((destination/'import-manifest.json').read_text(encoding='utf-8'))
         assert manifest['source_sha256'] == hashlib.sha256(source.read_bytes()).hexdigest()
         for relative, expected in manifest['copied_assets'].items():
             assert hashlib.sha256((destination/relative).read_bytes()).hexdigest() == expected, relative
-        for match in re.finditer(r"\{\{ '/assets/blog/"+slug+r"/([^']+)' \| relative_url \}\}", body):
+        for match in re.finditer(r"\{\{ '/assets/blog/"+asset_slug+r"/([^']+)' \| relative_url \}\}", body):
             assert (destination/match[1].split('?')[0]).is_file(), match[1]
+        assert f'cover: "/assets/blog/{asset_slug}/{settings["cover"]}?v=' in metadata
+        assert all(f'/assets/blog/{legacy}/' not in imported for legacy in POSTS), slug+' legacy asset URL'
+        assert not (ROOT/'assets/blog'/slug).exists(), slug+' legacy asset directory'
         assert f'permalink: "/blog/{settings["url_slug"]}/"' in metadata
         assert f'redirect_from: ["/blog/{slug}/"]' in metadata
         assert f'list_order: {settings["list_order"]}' in metadata
@@ -50,7 +54,7 @@ def main():
             assert '<text ' not in (destination/'cover.svg').read_text(encoding='utf-8')
         actual = {p.relative_to(destination).as_posix() for p in destination.rglob('*') if p.is_file()}
         assert actual == required, (slug, 'unexpected or missing publication files', actual ^ required)
-        report.append({'slug': slug, 'figures': manifest['figures'],
+        report.append({'slug': slug, 'asset_slug': asset_slug, 'figures': manifest['figures'],
                        'verified_assets': len(manifest['copied_assets']), 'prose_and_formulas': 'unchanged'})
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
