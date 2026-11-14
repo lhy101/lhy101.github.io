@@ -1,0 +1,33 @@
+{
+  "source": "simrl-staleness-blog.zh-CN.md",
+  "source_sha256": "351f853818570905b3f78e45617c5f017875355b63862049ec3e701958d2095f",
+  "figures": 26,
+  "copied_assets": {
+    "control-mechanisms-recall-blog.png": "292a141c0b6488444b12afd1156a564618a27667ae2661feaae18edc6336b18f",
+    "l1_violations-blog.png": "9528455928c3ff3e57efb97e1408af14476514c48c824f9796ade39bdd8fdb13",
+    "ladder_l2_l3-blog.png": "5fc3b789771a7bd33e2345ec33c5c0aa90e5de6be6fb3617379d9864638d3c85",
+    "length_bias-blog.png": "6d12a549440d9fcaf94ae2cad5f9eb3b5212f2e5f72a4bbca17ded9e280b2430",
+    "matched_throughput-blog.png": "e8ff4ccb1c32d7156e730f69ef3b4e5dc3eb2c4bf6f01bb625ab8cd7963f4443",
+    "preempt_reprefill-blog.png": "5c3bdece28fb74c0db4a91fb24cf7c4e82bb2644192e602859d37e25accf6799",
+    "slow_batch_lengths-blog.png": "bbde84488893c7227c32734b30684e03d0b93080675a05bb7da4f80b40bce9a3",
+    "sweep_areal-blog.png": "071c3b93d0a58837fb013cbf84a972d9950dd707d001e517a7ad722a2319955c",
+    "sweep_dressage-blog.png": "2c5f62ce37298c0a896ca38c06cd2ea21843e82b61bcccbbcee8fab89de31c17",
+    "sweep_nemo_in_order-blog.png": "a20614ef16d09e8f7709be699cb7a36d0046c13ee59bbac817ab37d2e4064866",
+    "sweep_nemo_ready_first-blog.png": "4efac4d7853056a3bac306cf5b8fc5d8b69d79bd3c359ab9efc1237e22d1e243",
+    "sweep_nemo_weight_fifo-blog.png": "b0b7aace23a1996f302668911f1f1917ed9897e7febe35f0bd568db7f7467577",
+    "sweep_nemo_windowed-blog.png": "4ae5a82cd9e72dd68a9d4696852b9907fe9ec6ddf718e8bc19a487df1f92bb59",
+    "sweep_openrlhf-blog.png": "d9abe99ee64cbdf025e306a78b1878ee694ec7129aa30a8f230de0d877773da9",
+    "sweep_prime_rl-blog.png": "8a782f283d98506594a9a07e85dd0a8adc2dae54b8670068ecc05dd15e8b1f65",
+    "sweep_roll-blog.png": "d864afc901fa0b9c6e1bd4e15c321199ad04c993b1d4c992c24a2e1584c23233",
+    "sweep_skyrl-blog.png": "a1e78f82857c1ef68640d525f4070495da362e09077d8e1c34eb823c24682ea2",
+    "sweep_slime-blog.png": "46b95e0e4f43207fa97c55262856bb10b73a9c4469f1d340ba306a18df04ff98",
+    "sweep_trl-blog.png": "1f8ccdcbfdcf63aae1db22500be0e01be063ad8eb5b9adc39c461d981888aa86",
+    "sweep_verl_drop-blog.png": "1105a6f46a3155ed859f100687d53075e52ba65b3953eb663de03e05476a5e17",
+    "sweep_verl_wait-blog.png": "4fb2f2f62788e8108f06cd134293932a070c1bfa61b3d1231f58307fe8868ba7",
+    "sweep_verl_wait_cohort-blog.png": "01f795337f445460488b6bd53f7317e789e79943529961d953c1f777416fec63",
+    "trl_verl_matched-blog.png": "733ab2169e4e80f4e064fa62fad0695023eb8021ff12fbacee15fc211de12c9b",
+    "verl_alignment-blog.png": "8ce9b2327345a43ceeebfaaca1f943f5d91a70183a35b2173e9d26be1878adc0",
+    "verl_drop_wait_matched-blog.png": "c0bd6eddccee80c4ed6adcabc32f142573ec92fcdc1c2236b6146e79342cf965",
+    "workload_lengths-blog.png": "7199307870bc63124378b7f4f5124ebc795755abb001a00b5d8f4da2152e0440"
+  }
+}

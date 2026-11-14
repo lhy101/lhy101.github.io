@@ -18,6 +18,13 @@ POSTS = {
         'cover_alt': '10 个异步 RL 框架的 L1、L2、L3 控制机制与严格 staleness 控制对比',
         'asset_prefix': 'assets/async-rl-staleness-blog/',
     },
+    'simrl-staleness': {
+        'source': 'simrl-staleness-blog.zh-CN.md',
+        'date': '2026-11-14', 'series': 'PSRL / 02', 'cover': 'matched_throughput-blog.png',
+        'description': '在 SimRL 的统一环境中比较各框架的 staleness 控制机制，分析有效吞吐、丢弃浪费、长尾等待与数据选择偏向。',
+        'cover_alt': '不同 staleness 上限下，各框架控制机制的有效吞吐对比',
+        'asset_prefix': 'assets/simrl-staleness/',
+    },
     'psrl-staleness': {
         'source': 'psrl-staleness-blog.zh-CN.md',
         'date': '2026-10-31', 'series': 'PSRL / 03', 'cover': 'cover.svg',
@@ -101,23 +108,21 @@ def import_post(source, slug):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source/figure, target)
         copied[relative] = sha256(source/figure)
-        if slug == 'async-rl-staleness' and Path(figure).suffix == '.svg':
-            png = Path(figure).with_suffix('.png')
-            shutil.copy2(source/png, target.with_suffix('.png'))
-            copied[str(Path(relative).with_suffix('.png'))] = sha256(source/png)
     if slug == 'async-rl-staleness':
-        with Image.open(destination/'systems-layer-map.png') as image:
+        with Image.open(source/settings['asset_prefix']/'systems-layer-map.png') as image:
             scale = image.width/1280
             cover = image.crop(tuple(round(value*scale) for value in (48, 216, 1232, 1061)))
             cover.save(destination/'cover.webp', quality=94)
             width, height = cover.size
-    else:
-        for extension in ('svg', 'png'):
-            cover = source/f'assets/psrl-staleness/protocol-cover.{extension}'
-            shutil.copy2(cover, destination/f'cover.{extension}')
-            copied[f'cover.{extension}'] = sha256(cover)
+    elif slug == 'psrl-staleness':
+        cover = source/'assets/psrl-staleness/protocol-cover.svg'
+        shutil.copy2(cover, destination/'cover.svg')
+        copied['cover.svg'] = sha256(cover)
         width, height = 1280, 720
         import_animation(source, destination, copied)
+    else:
+        with Image.open(destination/settings['cover']) as cover:
+            width, height = cover.size
     metadata = {
         'layout': 'blog-post', 'title': title, 'description': settings['description'],
         'date': settings['date'], 'lang': 'zh-CN', 'series': settings['series'],
@@ -132,7 +137,19 @@ def import_post(source, slug):
     manifest = {'source': settings['source'], 'source_sha256': sha256(original_path),
                 'figures': len(figures), 'copied_assets': copied}
     (destination/'import-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-    print(f'Imported {slug}: {len(figures)} figures, {len(copied)} source assets, and one cover.')
+    # These per-article directories contain only imported publication assets.
+    # Remove superseded media and unreferenced format variants after copying.
+    required = set(copied) | {settings['cover'], 'import-manifest.json'}
+    if slug == 'psrl-staleness':
+        required.add('animation/index.html')
+    removed = []
+    for path in sorted(destination.rglob('*')):
+        if path.is_file() and path.relative_to(destination).as_posix() not in required:
+            removed.append(path.relative_to(destination).as_posix())
+            path.unlink()
+    if removed:
+        print(f'Removed unused {slug} assets: {", ".join(removed)}')
+    print(f'Imported {slug}: {len(figures)} figures, {len(required)} publication files (including cover and manifest).')
 
 
 def main():

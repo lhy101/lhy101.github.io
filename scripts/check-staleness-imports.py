@@ -33,13 +33,17 @@ def main():
         formulas = lambda text: [re.sub(r'\s+', '', strip_equations(m)) for m in re.findall(r'\$\$([\s\S]*?)\$\$', text)]
         assert formulas(original) == formulas(body), slug+' formula parity'
         assert len(re.findall('<details', original)) == len(re.findall('<details markdown="1"', body))
+        assert manifest['figures'] == len(re.findall(r'!\[[^\]]*\]\((assets/[^)]+)\)', original))
+        required = set(manifest['copied_assets']) | {settings['cover'], 'import-manifest.json'}
         if slug == 'psrl-staleness':
-            assert manifest['figures'] == 24
+            required.add('animation/index.html')
             assert body.count('<details markdown="1" class="protocol-detail"') == 7
             player = (destination/'animation/index.html').read_text(encoding='utf-8')
             assert "const base='../animation-layers/';" in player
             assert '../../assets/psrl-staleness/' not in player
             assert '<text ' not in (destination/'cover.svg').read_text(encoding='utf-8')
+        actual = {p.relative_to(destination).as_posix() for p in destination.rglob('*') if p.is_file()}
+        assert actual == required, (slug, 'unexpected or missing publication files', actual ^ required)
         report.append({'slug': slug, 'figures': manifest['figures'],
                        'verified_assets': len(manifest['copied_assets']), 'prose_and_formulas': 'unchanged'})
     print(json.dumps(report, ensure_ascii=False, indent=2))

@@ -15,17 +15,21 @@ author_profile: false
 
 # 异步 RL 框架的 Staleness，究竟怎么控制（三）？
 
-在系列博客的第一篇中，我们沿着一条 trajectory 的生命周期，详细探讨了不同异步 RL 框架的三层 staleness 控制：生成前的 L1 准入，生成过程中的 L2 处理，以及训练前的 L3 剔除。文章最后留下了一个问题：
+在系列博客的第一篇中，我们沿着一条 trajectory 的生命周期，详细探讨了不同异步 RL 框架的三层 staleness 控制：生成前的 L1 准入，生成过程中的 L2 控制，以及训练前的 L3 处理。文章最后留下了一个问题：
 
 **我们能否设计一套更灵活的控制机制，既不丢弃数据，又能保证最大 staleness？**
 
 让我们先回想一下目前保证最大 staleness 的常见做法：L3 丢弃。数据进入训练前，我们检查它的版本，发现太旧就不用了。这样的做法尽管守住了上限，但被丢弃数据的生成、后处理和 reward 计算早已完成，这些计算就白白浪费了。
 
-而 NeMo-RL 的 `in_order` 则提供了另一个思路：既然不想等到最后才发现数据太旧，那就在数据准入时，提前安排好它要参加哪一轮训练。正常按序执行时，数据按约定的轮次取用，不必等到完成后再因为版本太旧而被淘汰。但这个办法也有不够灵活的地方：假如当前 batch 就差一条长尾，后面 batch 的几条数据却早已完成，由于目标轮次已经绑定，我们不能拿后面的结果立刻补上当前这个空缺。因此，训练不得不停等，造成性能受损。
+在系列博客的第二篇中，我们通过定量的实验，发现这种浪费会显著降低端到端的有效吞吐，并且还会导致数据分布系统性地偏向保留更短的序列，这并不是我们希望看到的。
 
-那么，这个问题是不是可以进一步得到解决呢？
+[![L3 丢弃与 L3 等待：计算浪费、数据偏置与训练停等]({{ '/assets/blog/psrl-staleness/l3-discard-vs-wait.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/l3-discard-vs-wait.png' | relative_url }})
 
-顺着这个思路想，提前安排训练位置确实可以不用丢弃数据就把 staleness 直接控制住，但我们一定要在一开始就把最终训练 batch 定死吗？我们能不能先为 trajectory 留好一个位置，等它真正完成时，再根据当时的情况调整？这样，快的 trajectory 就有机会早点参与训练，慢的 trajectory 也不至于因为一直被往后推而超限。
+而与大多数做法不同的是，NeMo-RL 的 `weight_fifo` 以及 `in_order` 选择了另一条路线：既然不想等到最后才发现数据太旧，那就在数据开始生成之前，就提前安排好它要参加哪一轮训练。正常按序执行时，数据按约定的轮次取用，不必等到完成后再因为版本太旧而被淘汰。但这个办法也有不够灵活的地方：假如当前 batch 就差一条长尾，后面 batch 的几条数据却早已完成，由于目标轮次已经绑定，我们不能拿后面的结果立刻补上当前这个空缺。因此，训练不得不停等，造成性能受损。
+
+**那么，究竟该怎么做，才可以在保证 staleness 严格控制的前提下，最大程度优化系统性能呢？**
+
+顺着 NeMo-RL 的思路想，提前安排训练位置确实可以不用丢弃数据就把 staleness 直接控制住，但我们一定要在一开始就把最终训练 batch 定死吗？我们能不能先为 trajectory 留好一个位置，等它真正完成时，再根据当时的情况调整？这样，快的 trajectory 就有机会早点参与训练，慢的 trajectory 也不至于因为一直被往后推而超限。
 
 为此，我们提出了一套 *Reserve*–*Occupy* 协议，其核心想法是把**生成侧的准入**和**训练侧的 batch 组装**放在一起考虑，让两者在同一个协议下配合起来：准入前就考虑数据之后能在哪里训练，结果完成后再进行 batch 排布上的优化，并反过来影响后续准入。这样，我们既能在不丢弃数据的情况下严格控制住最大 staleness，又能避免过早固定训练 batch 而让灵活性和性能受限。
 
@@ -247,7 +251,7 @@ I 最后完成后，Buffer $$v_2$$ 也变成 *READY*，等上一轮更新结束�
 
 #### 7.1. Partial Rollout
 
-一条 trajectory 可以由多个版本逐步生成（即 partial rollout，详见系列博客第一篇），而这些版本一定是单调递增的。因此，我们在准入时记录的 $$v_{\text{traj}}$$ 就是整条 trajectory 使用的最早模型版本，而后续片段的版本只会逐步增大。比如最早的前缀来自 $$v_0$$，尽管后续使用 $$v_1$$、$$v_2$$ 依次生成，整条 trajectory 的标签依然会按 $$v_0$$ 计算。最终放置时仍按这个最早版本检查
+一条 trajectory 可以由多个版本逐步生成（即 partial rollout，详见系列博客第一篇），而这些版本一定是单调递增的。因此，我们在准入时记录的 $$v_{\text{traj}}$$ 就是整条 trajectory 使用的最早模型版本，而后续片段的版本只会逐步增大。比如最早的前缀来自 $$v_0$$，尽管后续使用 $$v_1$$、$$v_2$$ 依次生成，整条 trajectory 的标签依然会按 $$v_0$$ 计算。最终放置时仍按这个最早版本检查：
 
 $$
 \begin{equation*}
@@ -307,65 +311,47 @@ $$
 
 我们模拟 Qwen3-8B 在一台配有 $$8$$ 张 H20 的机器上进行 RL 训练。其中，$$2$$ 张卡用于推理，对应 $$2$$ 个 rollout instance，各自采用 $$\mathrm{TP}=1$$。另外 $$6$$ 张卡用于训练，使用 Megatron，设置为 $$\mathrm{TP}=2$$、$$\mathrm{PP}=3$$、$$\mathrm{DP}=1$$。我们采用 GRPO 算法，group size 为 $$8$$，每个训练 batch 包含 $$16$$ 个 prompt，也就是 $$16\times8=128$$ 条 trajectory，并默认开启 partial rollout。
 
-我们使用来自 dapo-math-17k 真实训练过程的负载 trace，包含 $$1024$$ 个 prompt group、共 $$8192$$ 条 response。原始负载的 prompt 长度上限设置为 $$1024$$ token，response 长度上限设置为 $$38912$$ token，具体分布如下。
+我们使用来自 dapo-math-17k 真实训练过程的负载 trace，包含 $$1024$$ 个 prompt group、共 $$8192$$ 条 response。该负载的 prompt 长度上限设置为 $$1024$$ token，response 长度上限设置为 $$38912$$ token，具体分布如下。
 
-[![原始负载的 prompt 与 response 长度分布]({{ '/assets/blog/psrl-staleness/exp/length_histograms-blog.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/length_histograms-blog.png' | relative_url }})
-
-为了进一步观察长尾的影响，我们还在原始 trace 上构造了一组更极端的负载：选取 $$3$$ 个 group，让每组全部 $$8$$ 条 response 一起变长，组内平均长度增加到约 $$45000$$ token，约为原始 trace 中最长一组平均长度 $$34449$$ 的 $$1.3$$ 倍。
-
-对于构造后的负载，我们将 response 上限放宽到 $$131072$$ token，不再按原始的 $$38912$$ 截断。下图展示了调整后的长度分布，并在右上角放大了长尾部分，方便观察这些数量较少、长度却明显更大的 response。
-
-[![构造长尾负载的长度分布，右上角放大超长 response 所在区间]({{ '/assets/blog/psrl-staleness/exp/length_histograms_longtail-blog.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/length_histograms_longtail-blog.png' | relative_url }})
+[![负载的 prompt 与 response 长度分布]({{ '/assets/blog/psrl-staleness/exp/length_histograms-blog.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/length_histograms-blog.png' | relative_url }})
 
 ### 9. 正确性验证：协议是否全程不超过 staleness 上限
 
 我们首先验证协议的正确性：给定 staleness 上限 $$\eta$$，这套协议能否确保每个训练 batch 中的数据都不超过这一上限？
 
-我们固定每个 rollout instance 的 max concurrency 为 $$40$$，然后分别设置 $$\eta\in\{0,1,2,3,4,5\}$$，在两种负载下各运行 $$100$$ 个训练 batch。下图展示了原始负载的实验结果：每个子图对应一个 $$\eta$$，每根柱子对应一个训练 batch，不同深浅的颜色表示这一批中不同 staleness 的 trajectory 数量。
+我们固定每个 rollout instance 的 max concurrency 为 $$40$$，然后分别设置 $$\eta\in\{0,1,2,3,4,5\}$$，每种设置运行 $$100$$ 个训练 batch。下图展示了实验结果：每个子图对应一个 $$\eta$$，每根柱子对应一个训练 batch，不同深浅的颜色表示这一批中不同 staleness 的 trajectory 数量。
 
-[![原始负载下，六种 staleness 上限对应的逐 batch 构成]({{ '/assets/blog/psrl-staleness/exp/staleness_composition_grid-blog.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/staleness_composition_grid-blog.png' | relative_url }})
+[![六种 staleness 上限对应的逐 batch 构成]({{ '/assets/blog/psrl-staleness/exp/staleness_composition_grid-blog.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/staleness_composition_grid-blog.png' | relative_url }})
 
-我们再用加入更长尾 group 的负载进行同样的实验，结果如下：
+从图中，我们可以看到，每根柱子的总高度始终为 $$128$$，说明每个训练 batch 都包含完整的 $$128$$ 条 trajectory。与此同时，各子图中实际出现的 staleness 都没有超过对应的 $$\eta$$。$$6$$ 种上限、每组 $$100$$ 个 batch，合计展示的 $$600$$ 个 batch 中都没有出现超限。
 
-[![构造长尾负载下，六种 staleness 上限对应的逐 batch 构成]({{ '/assets/blog/psrl-staleness/exp/staleness_composition_grid_longtail-blog.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/staleness_composition_grid_longtail-blog.png' | relative_url }})
-
-从这两张图中，我们可以看到，每根柱子的总高度始终为 $$128$$，说明每个训练 batch 都包含完整的 $$128$$ 条 trajectory。与此同时，各子图中实际出现的 staleness 都没有超过对应的 $$\eta$$。两种负载、$$6$$ 种上限、每组 $$100$$ 个 batch，合计展示的 $$1200$$ 个 batch 中都没有出现超限。
-
-值得一提的是，当 $$\eta=5$$ 时，两种负载下观测到的最大 staleness 都只有 $$4$$。这是因为 **$$\eta$$ 限制的是数据参与训练时允许的最大版本差，并不意味着数据一定会打满这个上限再参加训练。** 只要当前有更早的合法位置，我们的协议就会通过 *Occupy* 尽早安排这些数据。
+值得一提的是，当 $$\eta=5$$ 时，我们观测到的最大 staleness 只有 $$4$$。这是因为 **$$\eta$$ 限制的是数据参与训练时允许的最大版本差，并不意味着数据一定会打满这个上限再参加训练。** 只要当前有更早的合法位置，我们的协议就会通过 *Occupy* 尽早安排这些数据。
 
 这些实验结果与我们前面对协议的分析一致：不论有多么极端的长尾，我们的协议都可以在不丢弃数据的前提下，严格控制 staleness。
 
 ### 10. 性能验证：相同 max staleness 下的吞吐对比
 
-接下来，我们把这套协议与前文分析的另外 $$3$$ 种具有严格 staleness 控制的机制放在一起比较。（1）NeMo-RL 的 `in_order`：在 L1 准入时绑定训练轮次，提前固定 L3 的 batch 组建，确保 staleness 严格受控。（2）verl 的 `drop` 以及 TRL：在 L1 限制准入，并在 L3 过滤超限结果。（3）ROLL：进一步在 L2 提前淘汰注定超限的 trajectory。
+接下来，我们把这套协议与前文分析的另外几种具有严格 staleness 控制的机制放在一起比较。（1）NeMo-RL 的 `in_order` 和 `weight_fifo`：二者都不丢弃超限数据。前者在 L1 准入时绑定训练轮次，并在 L3 训练前停等，确保严格按轮次进行。后者则是严格按权重版本排队并进行训练，因此同样需要在训练前停等。（2）verl 的 `drop` 以及 TRL：二者均在 L1 限制准入，并在 L3 过滤超限结果。（3）ROLL：其在 L1 与 L3 控制的基础上，进一步在 L2 提前淘汰生成中已超限的 trajectory。
 
 本组实验覆盖 $$\eta\in\{1,2,3\}$$，每次模拟 $$10$$ 个训练批次。我们对齐各机制所允许的 max staleness $$\eta$$。特别地，verl 的 L1 准入额度还可以通过 `num_warmup_batches` 单独调节，这里我们固定 `num_warmup_batches` 为默认值 $$1$$，不随 $$\eta$$ 一起增大。
 
 我们使用**有效吞吐**作为比较指标，即实际被 RL 训练采用的 token 总数，除以 RL 运行的总时长，单位为 tokens/s。即使某套机制生成了更多数据，其中没有参与训练的部分也不会计入有效吞吐。
 
-在下面两张图中，我们用 Ours 表示我们这套 *Reserve*-*Occupy* 协议。**柱子的实色部分和顶部数值表示有效吞吐。** 上方两种阴影分别表示在 L2、L3 被丢弃的部分，这些部分不计入有效吞吐。因此，比较性能时应看实色部分，不能把包含阴影的总柱高当作有效吞吐。绿色倍率则表示我们的协议相对于对应基线的有效吞吐加速比。
+在得到的实验效果图中，我们用 Ours 表示我们这套 *Reserve*-*Occupy* 协议。**柱子的实色部分和顶部数值表示有效吞吐。** 上方两种阴影分别表示在 L2、L3 被丢弃的部分，这些部分不计入有效吞吐。绿色倍率则表示我们的协议相对于对应基线的有效吞吐加速比。
 
-原始负载下的结果如下：
+[![有效吞吐与 L2、L3 丢弃开销]({{ '/assets/blog/psrl-staleness/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png?v=20261113-updated' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png?v=20261113-updated' | relative_url }})
 
-[![原始负载下的有效吞吐与 L2、L3 丢弃开销]({{ '/assets/blog/psrl-staleness/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png?v=20261102-corrected' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10-blog.png?v=20261102-corrected' | relative_url }})
+**首先，我们对比同样不依赖超限丢弃的 NeMo-RL `in_order` 和 `weight_fifo`。** 在三个测试点上，我们的有效吞吐分别为 $$1929$$、$$2007$$、$$2056$$ tokens/s，约为 `in_order` 的 $$1.11\text{–}1.14$$ 倍、`weight_fifo` 的 $$1.06\text{–}1.17$$ 倍。
 
-长尾更显著时的结果如下：
+这一差距与前文讨论的两套机制的区别相吻合。`weight_fifo` 以及 `in_order` 在生成前就固定了训练 batch，而我们的协议通过 *Reserve* 为每个 group 保留合法位置，再通过 *Occupy* 根据实际完成顺序调整放置。这样，完成较快的 group 可以更早凑齐当前 batch，长尾 group 则能在合法范围内后移。因此，相比于固定安排 batch，我们的协议更加灵活，在维持 staleness 约束且不丢弃数据的前提下，可以最大程度地优化系统性能。
 
-[![构造长尾负载下的有效吞吐与 L2、L3 丢弃开销]({{ '/assets/blog/psrl-staleness/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10_longtail-blog.png' | relative_url }})]({{ '/assets/blog/psrl-staleness/exp/ours_vs_nemo_vs_verl_vs_roll_throughput_v10_longtail-blog.png' | relative_url }})
+**其次，我们对比依赖 L3 过滤的 verl `drop` 和 TRL。** $$\eta=1$$ 时，verl 有明显的超限丢弃，我们的有效吞吐约为它的 $$1.34$$ 倍。当 $$\eta=2$$ 时，verl 仍有一部分数据在 L3 被丢弃，我们的有效吞吐约为它的 $$1.10$$ 倍。直到 $$\eta=3$$，verl 才不再出现超限丢弃，吞吐差距也缩小到约 $$1.05$$ 倍。
 
-**首先，我们对比同样不依赖超限丢弃的 NeMo-RL `in_order`。** 在原始负载下，我们的有效吞吐约为它的 $$1.07\text{–}1.12$$ 倍，长尾负载下则约为 $$1.08\text{–}1.13$$ 倍。
+而对于 TRL，L1 准入量随 staleness 设置一同扩大，并未被限制为固定值，这导致在所有的测试点上，TRL 都出现了 L3 丢弃。这使得我们的有效吞吐始终具有优势，加速比维持在 $$1.20$$ 到 $$1.36$$ 倍之间。
 
-这一差距与前文讨论的两套机制的区别相吻合。`in_order` 在生成前就固定了训练 batch，而我们的协议通过 *Reserve* 为每个 group 保留合法位置，再通过 *Occupy* 根据实际完成顺序调整放置。这样，完成较快的 group 可以更早凑齐当前 batch，长尾 group 则能在合法范围内后移。因此，相比于固定安排 batch，我们的协议更加灵活，在维持 staleness 约束且不丢弃数据的前提下，可以最大程度地优化系统性能。
+**最后，我们对比进一步加入 L2 淘汰的 ROLL。** ROLL 可以提前停止已经超限的 trajectory，避免继续生成后续 token，但具体收益依赖于 staleness 上限和具体配置。例如，$$\eta=1$$ 时，ROLL 的有效吞吐约为 $$1512$$ tokens/s，高于 verl 的 $$1438$$，却低于 TRL 的 $$1612$$。整体来看，我们的有效吞吐相较于 ROLL 同样有着显著的优势，加速比维持在 $$1.28$$ 到 $$1.33$$ 倍之间。
 
-**其次，我们对比依赖 L3 过滤的 verl `drop` 和 TRL。** 原始负载、$$\eta=1$$ 时，verl 有明显的超限丢弃，我们的有效吞吐约为它的 $$1.29$$ 倍。当 $$\eta=2$$ 时，verl 仍有一部分数据在 L3 被丢弃，我们的有效吞吐约为它的 $$1.11$$ 倍。直到 $$\eta=3$$，verl 才不再出现超限丢弃，吞吐差距也缩小到约 $$1.02$$ 倍。这说明，在这组负载下，较紧的 L1 准入（`num_warmup_batches=1`）配合更宽的 staleness 上限，可以逐步减少超限丢弃。
-
-不过，当我们进一步加重负载的长尾效应时，即使 $$\eta=3$$，verl 仍有数据在 L3 被丢弃。此时，我们的有效吞吐约为它的 $$1.12$$ 倍。可见，L1 的数量限制能够减少积压，但遇到更慢更长尾的数据时，仍可能需要在 L3 丢弃数据来保证 staleness 上限。
-
-而对于 TRL，L1 准入量随 staleness 设置一同扩大，并未被限制为固定值，这导致在所有的测试点上，TRL 都出现了 L3 丢弃。不过，也不能仅凭丢弃量就判定它一定更慢。例如，原始负载、$$\eta=1$$ 时，TRL 的有效吞吐约为 $$1709$$ tokens/s，高于 verl 的 $$1449$$。这也说明，限制准入是在生成并发与丢弃浪费之间做取舍，实际效果并不能简单预测，需要看最终的有效吞吐。
-
-**最后，我们对比进一步加入 L2 淘汰的 ROLL。** ROLL 可以提前停止已经超限的 trajectory，避免继续生成后续 token，但具体收益还取决于 staleness 上限和具体的分布。例如，长尾负载、$$\eta=1$$ 时，ROLL 的有效吞吐约为 $$1421$$ tokens/s，高于 verl 的 $$1282$$，却低于 TRL 的 $$1471$$。原始负载、$$\eta=2$$ 时，ROLL 的 $$1512$$ 也低于另外两者。因此，L2 提前淘汰有助于减少继续生成的浪费，但也不能保证整体有效吞吐一定更高。
-
-总的来看，在本次两种负载、$$3$$ 个 staleness 上限的测试点中，我们这套 *Reserve*-*Occupy* 协议的有效吞吐均为最高，同时没有依靠丢弃超限数据来维持 staleness 上限。我们在准入时为每条 trajectory 保留合法位置，在完成后再根据当前状态调整放置，既避免了超限丢弃造成的浪费，也为更早凑齐训练 batch 留出了空间。
+总的来看，在本次所有测试点中，我们这套 *Reserve*-*Occupy* 协议的有效吞吐均为最高，没有依靠丢弃超限数据来维持 staleness 上限。我们在准入时为每条 trajectory 保留合法位置，在完成后再根据当前状态调整放置，既避免了超限丢弃造成的浪费，也为更早凑齐训练 batch 留出了空间。
 
 这里为了公平比较单独的 staleness 控制机制所带来的影响，我们采用了 [**SimRL**](https://github.com/psrl-project/SimRL) 上模拟出的结果，真实 GPU 上的端到端吞吐与训练收敛仍需进一步验证。不过，对于本文所关心的问题，这组实验已充分展示了该协议的效果：**在所测试的负载下，我们通过 L1 准入与 L3 放置的动态配合，既严格控制了 staleness，也取得了更高的有效训练吞吐。**
 
