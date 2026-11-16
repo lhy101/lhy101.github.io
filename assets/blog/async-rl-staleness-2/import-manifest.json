@@ -1,6 +1,6 @@
 {
   "source": "simrl-staleness-blog.zh-CN.md",
-  "source_sha256": "1a31817fe225d63679da33594c4ca99897ec417b14320f9727294109ea95be94",
+  "source_sha256": "70a4510b7af4d62cd75440667736f91dfa6d11fb4091c7ce75fc008e7e4d66eb",
   "figures": 26,
   "copied_assets": {
     "control-mechanisms-recall-blog.png": "292a141c0b6488444b12afd1156a564618a27667ae2661feaae18edc6336b18f",
@@ -26,7 +26,7 @@
     "sweep_verl_wait-blog.png": "4fb2f2f62788e8108f06cd134293932a070c1bfa61b3d1231f58307fe8868ba7",
     "sweep_verl_wait_cohort-blog.png": "01f795337f445460488b6bd53f7317e789e79943529961d953c1f777416fec63",
     "trl_verl_matched-blog.png": "733ab2169e4e80f4e064fa62fad0695023eb8021ff12fbacee15fc211de12c9b",
-    "verl_alignment-blog.png": "8ce9b2327345a43ceeebfaaca1f943f5d91a70183a35b2173e9d26be1878adc0",
+    "verl_alignment-blog.png": "a9671f1076efb4f607550f45f17918442ac74e28df7b2e99e5aa334f9d14ac5d",
     "verl_drop_wait_matched-blog.png": "aeae513d280532cd2fa1efb23df27a0945f91fb25dc4621e8d28f13c9a86ef2a",
     "workload_lengths-blog.png": "7199307870bc63124378b7f4f5124ebc795755abb001a00b5d8f4da2152e0440",
     "cover.svg": "427901ed109dd823596bae54b5eb7d6deacd4adf0fa7397b3cd3cbfcbe6903e6"

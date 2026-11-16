@@ -72,27 +72,29 @@ $$
 
 ![异步 RL 流水线上的 L1 准入控制、L2 Rollout 运行时控制和 L3 Training 前过滤]({{ '/assets/blog/async-rl-staleness-1/three-layer-control.svg' | relative_url }})
 
-#### L1：准入控制（Admission Control）
+**L1：准入控制（Admission Control）**
 
 prompt 还没开始生成时，系统要先决定是否准入。通过准入控制来实现 staleness 控制的想法很直观：准入量越大，同一时期就越可能出现更多低版本的 trajectory，它们参与训练时的 staleness 也可能越大。因此，有的框架会限制生成中的 trajectory 条数，有的还会把已经生成完成、尚未被训练取样的结果一起计数。达到上限后，就先暂停准入。准入何时恢复则取决于具体机制，例如生成完成、结果被训练侧取走，或训练版本推进后释放新的额度。
 
-这一层最为直接且成本最低，因为被拦住的 prompt 还没有消耗生成计算。但问题也最为明显：**只限制数量，并不意味着能够限制每条 trajectory 的 staleness。** 假设系统最多允许 $$8$$ 条 trajectory 同时生成，其中一条从 $$v_0$$ 开始后一直没有完成。与此同时，其余槽位不断生成较短的 trajectory，使训练侧能够持续组 batch 并将模型更新到 $$v_5$$。此时，长 trajectory 仍只占用一个槽位，没有违反并发上限，但若这条 trajectory 最终生成完成并参与 $$v_5$$ 的训练，其中由 $$v_0$$ 生成的 token 的 staleness 就会高达 $$5$$。
+这一层最为直接且成本最低，因为被拦住的 prompt 还没有消耗生成计算。但问题也最为明显：**只限制数量，并不意味着能够限制每条 trajectory 的 staleness。** 假设系统最多允许 $8$ 条 trajectory 同时生成，其中一条从 $v_0$ 开始后一直没有完成。与此同时，其余槽位不断生成较短的 trajectory，使训练侧能够持续组 batch 并将模型更新到 $v_5$。此时，长 trajectory 仍只占用一个槽位，没有违反准入上限，但若这条 trajectory 最终生成完成并参与 $v_5$ 的训练，其中由 $v_0$ 生成的 token 的 staleness 就会高达 $5$。
 
 因此，L1 层面的控制可以减少数据积压，但仅靠数量限制，无法保证每条 trajectory 的 staleness 都不超过阈值。
 
-#### L2：Rollout 运行时控制（Rollout Runtime Control）
+**L2：Rollout 运行时控制（Rollout Runtime Control）**
 
 准入后，trajectory 就开始生成了。系统可以在权重更新或同步等特定时机检查仍在生成的 trajectory，并取消那些已经不可能满足 staleness 上限的任务。具体检查时机、比较的版本以及取消条件取决于框架实现。
 
-例如，一条 trajectory 从 $$v_1$$ 开始生成，到 $$v_5$$ 仍未结束。若允许的最大 staleness 为 $$3$$，此时版本差已达 $$4$$，系统便可在本次版本推进时取消它，无需等其完整生成后再处理。取消越早，节省的后续计算越多。但无法避免的是，此前已生成的 token 会被浪费。
+例如，一条 trajectory 从 $v_1$ 开始生成，到 $v_5$ 仍未结束。若允许的最大 staleness 为 $3$，此时版本差已达 $4$，系统便可在本次版本推进时取消它，无需等其完整生成后再处理。取消越早，节省的后续计算越多。但无法避免的是，此前已生成的 token 会被浪费。
 
-仅增加 L2 层面的控制仍不够：trajectory 生成完成后仍可能排队，而 L2 无法覆盖这段排队等待时间。trajectory 可能通过 L2 检验，却在后续排队过程中最终超过 staleness 上限。
+仅增加 L2 层面的控制仍不够：**trajectory 生成完成后仍可能排队，而 L2 无法覆盖这段排队等待时间**。trajectory 可能通过 L2 检验，却在后续排队过程中最终超过 staleness 上限。
 
-#### L3：Training 前控制（Training Input Control）
+**L3：Training 前控制（Training Input Control）**
 
-生成完成后，trajectory 通常会在 queue 或 buffer 中等待训练侧取样。系统可以按 FIFO（先进先出）等策略选择结果，也可以在取样或组装 batch 时检查其版本信息。一方面，系统可以将超限的 trajectory 或 group 排除在训练 batch 之外。被排除后，框架可以继续取样以补齐 batch。另一方面，系统也可以选择停等，有目的地等待一些较旧版本的 group 完成，防止超限。
+生成完成后，trajectory 通常会在 queue/buffer 中等待训练侧取样。系统可以按 FIFO（先进先出）等策略选择结果，也可以在取样或组装 batch 时检查其版本信息。一方面，系统可以将超限的 trajectory 或 group 排除在训练 batch 之外。被排除后，框架可以重新取样以补齐 batch。另一方面，系统也可以选择停等，确保某一个较旧版本的数据全部完成，防止超限。
 
-**L3 最接近训练入口，也是实现严格 staleness 控制最直接的位置。** 到了这里，系统可按实际训练版本检查 trajectory，只让合格结果进入 batch。但是，在 L3 进行控制的代价也很明显：若此时选择丢弃，整条 trajectory 的生成计算便白费了。因此，L1 是否限制了过量准入、L2 是否提前终止了超限生成，都在一定程度上决定了 L3 会浪费多少。若大部分 trajectory 都能及时参与训练，L3 也可能很少触发丢弃。
+L3 最接近训练入口，也是**实现严格 staleness 控制最直接的位置**。到了这里，系统可按实际训练版本检查 trajectory，只让合格结果进入 batch，也可以暂停训练，等待指定的数据就绪。但是，在 L3 进行控制的代价也很明显：若此时选择丢弃，整条 trajectory 的生成计算便白费了。若选择等待，训练端就可能因少数长尾而停下来，即使其他结果已经生成完成，也未必能立即用来补位。
+
+因此，L1 能否限制过量准入、L2 能否提前终止超限生成，都会在一定程度上影响 L3：若 L1 准入控制得当，且 L2 能及时取消在途生成，则在 L3 开始训练前，更多数据可及时完成并满足 staleness 限制，从而减少 L3 因丢弃或停等产生的开销。
 
 ### 4. 不同框架的三层机制
 

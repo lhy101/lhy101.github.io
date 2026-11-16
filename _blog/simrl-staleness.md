@@ -41,11 +41,11 @@ SimRL 本身的设计将在后续博客中详细介绍，这里我们只用一�
 
 ### 2. 模拟与真实运行的对照
 
-我们用一次真实的 verl `drop` 运行来检查模拟器的表现（先运行 verl，记录其真实输入输出长度的 trace，再使用模拟器运行该 trace）。下图比较了真实运行与模拟运行中 rollout 侧请求总数随时间的变化，而背景阴影则标出了训练阶段，其中斜纹部分是 PPO 所需的 log-prob 重算（`old_log_prob`），实色部分是梯度更新（`update_actor`）。
+我们用一次真实的 verl `drop` 运行来检查模拟器的表现（先运行 verl，记录其真实输入输出长度的 trace，再使用模拟器运行该 trace，训练时长采用真实运行的测量值）。下图比较了真实运行与模拟运行中 rollout 侧请求总数随时间的变化，以及 KV cache 占用（两个 rollout instance 取最大，对应右侧纵轴）。背景阴影标出训练阶段，其中斜纹部分是 PPO 所需的 log-prob 重算（`old_log_prob`），实色部分是梯度更新（`update_actor`）。
 
 [![真实 verl 运行与 SimRL 模拟对比]({{ '/assets/blog/async-rl-staleness-2/verl_alignment-blog.png' | relative_url }})]({{ '/assets/blog/async-rl-staleness-2/verl_alignment-blog.png' | relative_url }})
 
-这组对照采用如下配置：verl 的 `max_off_policy_threshold` 与 `max_warmup_batches` 均设置为 $$1$$ 并采用 `drop` 配置。每个 batch 包含 $$32$$ 个 group，每个 group 包含 $$8$$ 个 trajectory，response 上限为 $$10240$$。从统计量看，模拟相对真实运行的总时长偏差为 $$+2.5\%$$，忙时平均在途请求数偏差为 $$-2.5\%$$，忙时平均 KV 占用偏差为 $$-5.9\%$$。这基本印证了通过 SimRL 的模拟，我们可以较为准确地反映真实系统的运行情况。
+这组对照采用如下配置：最大 staleness 以及`max_warmup_batches` 均设置为1，并采用 `drop` 的策略。每个 batch 包含 $$32$$ 个 group，每个 group 一共 $$8$$ 条 trajectory。从统计量看，模拟相对真实运行的总时长偏差为 $$-1.5\%$$，忙时平均在途请求数偏差为 $$+1.5\%$$，忙时平均 KV 占用偏差为 $$-1.6\%$$。这基本印证了通过 SimRL 的模拟，我们可以较为准确地反映真实系统的运行情况。
 
 ### 3. 实验设置
 
