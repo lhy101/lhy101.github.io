@@ -36,6 +36,6 @@ If you wish to disable cookies, you may do so through your web browser options. 
 
 #### GoatCounter
 
-This site uses [GoatCounter](https://www.goatcounter.com/) to count blog page views and display per-article totals. Visiting a blog post sends its page path and request information to the configured GoatCounter site. See [GoatCounter's privacy policy](https://www.goatcounter.com/help/privacy) for details about its data collection and handling.
+This site uses [GoatCounter](https://www.goatcounter.com/) for private blog visit analytics. Per-article totals are not displayed publicly. Visiting a blog post sends its page path and request information to the configured GoatCounter site. See [GoatCounter's privacy policy](https://www.goatcounter.com/help/privacy) for details about its data collection and handling.
 
 The homepage also embeds a visitor map provided by MapMyVisitors. Loading the map may send request and connection information, including an approximate location, to that provider.

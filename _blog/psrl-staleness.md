@@ -1,6 +1,6 @@
 ---
 layout: "blog-post"
-title: "异步 RL 框架的设计与权衡：左手 Staleness，右手 Throughput（三）"
+title: "Staleness 在左，Throughput 在右（三）"
 description: "我们设计了一套 Reserve–Occupy 协议，在严格控制 staleness 的前提下，不丢弃任何数据，并最大化有效 RL 训练吞吐。"
 date: "2026-10-31"
 lang: "zh-CN"
@@ -15,7 +15,7 @@ cover_height: 720
 author_profile: false
 ---
 
-# 异步 RL 框架的设计与权衡：左手 Staleness，右手 Throughput（三）
+# Staleness 在左，Throughput 在右（三）
 
 在系列博客的第一篇中，我们沿着一条 trajectory 的生命周期，详细探讨了不同异步 RL 框架的三层 staleness 控制：生成前的 L1 准入，生成过程中的 L2 控制，以及训练前的 L3 处理。文章最后留下了一个问题：
 

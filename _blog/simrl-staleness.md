@@ -1,6 +1,6 @@
 ---
 layout: "blog-post"
-title: "异步 RL 框架的设计与权衡：左手 Staleness，右手 Throughput（二）"
+title: "Staleness 在左，Throughput 在右（二）"
 description: "在 RL 模拟器的统一环境中比较各框架的 staleness 控制机制，分析有效吞吐、丢弃浪费、长尾等待与数据选择偏向。"
 date: "2026-11-14"
 lang: "zh-CN"
@@ -15,7 +15,7 @@ cover_height: 1920
 author_profile: false
 ---
 
-# 异步 RL 框架的设计与权衡：左手 Staleness，右手 Throughput（二）
+# Staleness 在左，Throughput 在右（二）
 
 在上一篇博客中，我们分析了不同 RL 框架的 staleness 控制机制。在结尾，我们留下了一个很现实的问题：
 

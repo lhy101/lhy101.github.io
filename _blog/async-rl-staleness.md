@@ -1,6 +1,6 @@
 ---
 layout: "blog-post"
-title: "异步 RL 框架的设计与权衡：左手 Staleness，右手 Throughput（一）"
+title: "Staleness 在左，Throughput 在右（一）"
 description: "我们从 trajectory 的生命周期出发，对照 10 个异步 RL 框架的源码，分析不同框架的三层 staleness 控制机制。"
 date: "2026-10-22"
 lang: "zh-CN"
@@ -15,7 +15,7 @@ cover_height: 1690
 author_profile: false
 ---
 
-# 异步 RL 框架的设计与权衡：左手 Staleness，右手 Throughput（一）
+# Staleness 在左，Throughput 在右（一）
 
 随着大语言模型（LLM）的强化学习（RL）后训练越来越重要，如何高效地扩展 RL 训练系统，成为系统设计中的一个重要问题。为了提高 GPU 利用率和整体训练吞吐，越来越多的 RL 框架采用异步执行机制，将生成（rollout）和训练（training）解耦，使样本生成与模型训练能够并行推进，而不必严格同步等待。
 
