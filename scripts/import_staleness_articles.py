@@ -23,7 +23,7 @@ POSTS = {
         'source': 'simrl-staleness-blog.zh-CN.md',
         'date': '2026-11-14', 'series': 'PSRL / 02', 'cover': 'cover.svg',
         'list_order': 2, 'url_slug': 'async-rl-staleness-2',
-        'description': '在 RL 模拟器的统一环境中比较各框架的 staleness 控制机制，分析有效吞吐、丢弃浪费、长尾等待与数据选择偏向。',
+        'description': '我们在 RL 模拟器的统一环境中比较各框架的性能，分析有效吞吐、丢弃浪费、长尾等待与数据选择偏向。',
         'cover_alt': '14 个框架配置在 staleness 上限 1、2、3 下的端到端有效吞吐对比',
         'asset_prefix': 'assets/simrl-staleness/',
     },
